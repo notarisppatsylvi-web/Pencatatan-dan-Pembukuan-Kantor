@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <script>
+    setInterval(function() {
+      var icon = document.querySelector("link[rel*='icon']");
+      var url = "https://www.gstatic.com/images/icons/material/system/2x/book_black_24dp.png";
+      if (icon) {
+        if (icon.href !== url) icon.href = url;
+      } else {
+        var link = document.createElement('link');
+        link.rel = 'shortcut icon';
+        link.href = url;
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
+    }, 1000);
+  </script>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    body { background-color: #F1F5F9; font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+    /* ===== Selaraskan Bootstrap dengan tema utama Navy & Gold ===== */
+    :root {
+      --brand-primary: #1B3A6B;
+      --brand-primary-dark: #122544;
+      --brand-gold: #C9A84C;
+      --brand-gold-dark: #8A6A25;
+    }
+    .btn-primary {
+      --bs-btn-bg: var(--brand-primary);
+      --bs-btn-border-color: var(--brand-primary);
+      --bs-btn-hover-bg: var(--brand-primary-dark);
+      --bs-btn-hover-border-color: var(--brand-primary-dark);
+      --bs-btn-active-bg: var(--brand-primary-dark);
+      --bs-btn-active-border-color: var(--brand-primary-dark);
+      --bs-btn-disabled-bg: var(--brand-primary);
+      --bs-btn-disabled-border-color: var(--brand-primary);
+      --bs-btn-focus-shadow-rgb: 27,58,107;
+    }
+    .btn-outline-primary {
+      --bs-btn-color: var(--brand-primary);
+      --bs-btn-border-color: var(--brand-primary);
+      --bs-btn-hover-bg: var(--brand-primary);
+      --bs-btn-hover-border-color: var(--brand-primary);
+      --bs-btn-active-bg: var(--brand-primary);
+      --bs-btn-active-border-color: var(--brand-primary);
+      --bs-btn-focus-shadow-rgb: 27,58,107;
+    }
+    .bg-primary { background-color: var(--brand-primary) !important; }
+    .text-primary { color: var(--brand-primary) !important; }
+    .border-primary { border-color: var(--brand-primary) !important; }
+    .navbar-dark.bg-primary { background-color: var(--brand-primary) !important; background-image: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%); border-bottom: 3px solid var(--brand-gold); }
+    a { color: var(--brand-primary); }
+    a:hover { color: var(--brand-primary-dark); }
+
+    .bank-card { transition: all 0.2s; border: none; border-radius: 14px; cursor: pointer; }
+    .bank-card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(27,58,107,0.15); }
+    .add-bank-card { border: 2px dashed #B9C6DC !important; background: transparent; }
+    .add-bank-card:hover { background: rgba(27,58,107,0.03); }
+    
+    .sertifikat-cover-card { border: none; border-radius: 12px; background: #ffffff; box-shadow: 0 4px 12px rgba(27,58,107,0.08); transition: all 0.2s; cursor: pointer; border-left: 5px solid var(--brand-gold); }
+    .sertifikat-cover-card:hover { transform: scale(1.02); box-shadow: 0 6px 18px rgba(27,58,107,0.18); }
+    
+    .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); z-index: 9999; display: flex; align-items: center; justify-content: center; display: none; }
+    .badge-proses { background-color: var(--brand-gold); color: #402F0F; }
+    .badge-selesai { background-color: #10B981; color: white; }
+    
+    .navbar-brand img { height: 38px; width: auto; object-fit: contain; }
+    .card-logo-img { height: 45px; width: 45px; object-fit: contain; border-radius: 6px; }
+    .card-download-area { display: flex; flex-wrap: wrap; gap: 4px; padding-top: 8px; border-top: 1px dashed #dee2e6; margin-top: 8px; }
+    .btn-delete-file { color: #EF4444; cursor: pointer; transition: color 0.2s; font-size: 14px; }
+    .btn-delete-file:hover { color: #b91c1c; }
+
+    /* Header sekarang terpusat di PartialHeader.html sehingga tampilannya
+       identik & permanen di semua modul (lihat include() di bagian body). */
+  </style>
+</head>
+<body>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="text-center">
+      <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+      <p class="fw-bold text-dark fs-5" id="loadingText">Sedang memproses data...</p>
+    </div>
+  </div>
+
+  <?!= include('PartialHeader', {judulHeader: judulHeader, baseUrl: baseUrl}); ?>
+
+  <div class="container my-4">
+    
+    <!-- DASHBOARD UTAMA NAMA BANK -->
+    <div id="viewDashboard">
+      <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div>
+            <h4 class="fw-bold text-dark"><i class="fa-solid fa-cubes me-2 text-primary"></i>Daftar Bank</h4>
+            <p class="text-muted small mb-0">Silakan pilih bank untuk melacak, mencari data, atau melakukan entri berkas baru.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-12">
+          <div class="position-relative">
+            <i class="fa-solid fa-magnifying-glass position-absolute" style="left:16px; top:50%; transform:translateY(-50%); color:#94A3B8;"></i>
+            <input type="text" id="searchDashboardGlobal" class="form-control ps-5 shadow-sm" style="height:46px; border-radius:10px;" placeholder="Cari nama debitur, nama pemilik sertifikat, no sertifikat, atau no HP di semua bank..." oninput="handleSearchDashboardGlobal()">
+            <i class="fa-solid fa-xmark position-absolute" id="btnClearSearchDashboard" style="right:16px; top:50%; transform:translateY(-50%); color:#94A3B8; cursor:pointer; display:none;" onclick="clearSearchDashboardGlobal()" title="Bersihkan pencarian"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3" id="containerBankCards"></div>
+      <div class="row g-3" id="containerHasilPencarianGlobal" style="display:none;"></div>
+    </div>
+
+    <!-- HALAMAN DAFTAR CARD BERKAS PER BANK -->
+    <div id="viewDataBank" style="display: none;">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center border-bottom pb-3 mb-4">
+        <div>
+          <button class="btn btn-sm btn-secondary mb-2" id="btnKembaliDashboard"><i class="fa-solid fa-chevron-left me-1"></i> Dashboard</button>
+          <div class="d-flex align-items-center gap-2">
+            <span id="headerBankLogoContainer"></span>
+            <h3 class="fw-bold m-0 text-primary" id="titleNamaBank">Nama Bank</h3>
+          </div>
+        </div>
+        <div class="d-flex gap-2 mt-2 mt-md-0">
+          <button class="btn btn-success shadow-sm" id="btnCetakLaporan"><i class="fa-solid fa-print me-1"></i> Cetak Laporan</button>
+          <button class="btn btn-primary shadow-sm" id="btnBukaFormEntri"><i class="fa-solid fa-plus me-1"></i> Entri Berkas Baru</button>
+        </div>
+      </div>
+
+      <div class="card mb-4 shadow-sm border-0">
+        <div class="card-header bg-light fw-bold text-secondary"><i class="fa-solid fa-magnifying-glass me-2"></i>Filter / Cari Berkas Sertifikat</div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">Cari Nama Pemilik / Debitur / No Sertifikat</label>
+              <input type="text" id="searchGlobal" class="form-control" placeholder="Ketik lalu enter..." onkeyup="filterArsipCards()">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">Kecamatan</label>
+              <input type="text" id="searchKecamatan" list="datalistKecamatanSearch" class="form-control" placeholder="Ketik nama kecamatan..." oninput="filterArsipCards()">
+              <datalist id="datalistKecamatanSearch"></datalist>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-muted">Kelurahan / Desa</label>
+              <input type="text" id="searchKelurahan" class="form-control" placeholder="Ketik nama desa..." onkeyup="filterArsipCards()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3" id="gridSertifikatCards"></div>
+    </div>
+
+    <!-- FORM ENTRI / EDIT BERKAS -->
+    <div id="viewFormBerkas" style="display: none;">
+      <div class="row justify-content-center">
+        <div class="col-lg-8">
+          <div class="card shadow border-0">
+            <div class="card-header bg-primary text-white p-3 fw-bold" id="formActionTitle">Form Berkas</div>
+            <div class="card-body p-4">
+              <form id="formMasterBerkas">
+                <input type="hidden" id="formIdBerkas">
+                <input type="hidden" id="formSheetName">
+
+                <div class="row g-3 mb-3 bg-light p-2 border rounded m-0">
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold text-dark">Tanggal Terima Sertifikat <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="inpTanggalTerima" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold text-dark">Tanggal Selesai Berkas</label>
+                    <input type="date" class="form-control" id="inpTanggalSelesai">
+                  </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Nama Debitur <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="inpDebitur" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold">Nama Pemilik Sertifikat <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="inpPemilik" required>
+                  </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold">No HP WhatsApp</label>
+                    <input type="tel" class="form-control" id="inpNoHp">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold">Jenis Hak <span class="text-danger">*</span></label>
+                    <select class="form-select" id="inpJenisHak" required></select>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label fw-semibold">Nomor Sertifikat <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="inpNoSertifikat" required>
+                  </div>
+                </div>
+
+                <div class="row g-3 mb-3 bg-light p-2 border rounded m-0">
+                  <div class="col-12"><small class="text-primary fw-bold"><i class="fa-solid fa-map-location-dot me-1"></i> LETAK HAK</small></div>
+                  
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold text-secondary">Kecamatan <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="inpKecamatan" list="datalistKecamatanForm" required placeholder="Ketik nama kecamatan..." oninput="handleKecamatanFormChange()">
+                    <datalist id="datalistKecamatanForm"></datalist>
+                  </div>
+                  
+                  <div class="col-md-6">
+                    <label class="form-label fw-semibold text-secondary">Kelurahan / Desa <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="inpKelurahan" list="datalistKelurahanForm" required placeholder="Ketik nama kelurahan/desa...">
+                    <datalist id="datalistKelurahanForm"></datalist>
+                  </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                  <div class="col-md-12">
+                    <label class="form-label fw-semibold">Status Proses Berkas <span class="text-danger">*</span></label>
+                    <select class="form-select" id="inpProses" required onchange="handleProsesDropdownChange()"></select>
+                    <input type="text" class="form-control mt-2" id="inpProsesLainnya" style="display: none;">
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label fw-semibold text-secondary">Keterangan Tambahan</label>
+                  <textarea class="form-control" id="inpKeterangan" rows="2"></textarea>
+                </div>
+
+                <div class="mb-3 border p-3 bg-light rounded">
+                  <label class="form-label fw-semibold text-primary" id="lblJudulUpload">
+                    <i class="fa-solid fa-cloud-arrow-up me-1"></i> Lampirkan / Tambah File Sertifikat
+                  </label>
+                  <div class="small text-muted mb-2"><i class="fa-solid fa-circle-info me-1"></i>Bebas lampirkan ukuran file berapapun. Saat selesai entri, sistem mengompresi ukuran otomatis menjadi <b>Maximal 5 MB</b> per file sebelum tersimpan ke Drive.</div>
+                  
+                  <div id="containerExistingFiles" class="mb-3" style="display: none;">
+                    <div class="small fw-bold text-secondary mb-1"><i class="fa-solid fa-paperclip me-1"></i> File Terlampir Saat Ini:</div>
+                    <ul class="list-group" id="listExistingFiles"></ul>
+                  </div>
+
+                  <input type="file" class="form-control" id="inpFileSertifikat" accept="application/pdf,image/*" multiple onchange="handleFileSelectionChange()">
+                  <div id="fileUploadPreviewList" class="mt-2" style="display:none;"></div>
+                </div>
+
+                <div class="mb-4">
+                  <label class="form-label fw-semibold text-secondary">Nama Karyawan Penanggung Jawab <span class="text-danger">*</span></label>
+                  <select class="form-select" id="inpPenanggungJawab" required></select>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                  <button type="button" class="btn btn-secondary" id="btnBatalForm"><i class="fa-solid fa-xmark me-1"></i> Batal</button>
+                  <button type="submit" class="btn btn-primary" id="btnSubmitForm"><i class="fa-solid fa-floppy-disk me-1"></i> Simpan Data</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MODAL DETAIL DOKUMEN -->
+  <div class="modal fade" id="modalDetailBerkas" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-address-card me-2 text-info"></i>Detail Dokumen</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body p-4" id="contentDetailModal"></div>
+        <div class="modal-footer bg-light d-flex justify-content-between" id="footerDetailModal"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    const DATA_WILAYAH_RIAU = {
+      "Bangkinang Kota": ["Langgini", "Bangkinang", "Kumantan", "Ridan Permai"],
+      "Bangkinang": ["Binuang", "Laboy Jaya", "Muara Uwai", "Pasir Sialang", "Pulau Lawas", "Suka Mulya"],
+      "Tambang": ["Kualu", "Rimbo Panjang", "Tarai Bangun", "Tambang", "Teluk Kenidai", "Padang Luas", "Gobah", "Parit Baru", "Kualu Nenas", "Kuapan"],
+      "Siak Hulu": ["Pandau Jaya", "Kubang Jaya", "Tanah Merah", "Pangkalan Baru", "Buluh Cina", "Desa Baru", "Sialang Kubang", "Teratak Buluh"],
+      "Tapung": ["Petapahan", "Air Terbit", "Batu Gajah", "Indra Puri", "Pagaruyung", "Pantai Cermin", "Pelambaian"],
+      "Tapung Hilir": ["Kota Garo", "Gerbang Sari", "Kijang Makmur", "Sekijang", "Suka Maju", "Tebing Lestari"],
+      "Tapung Hulu": ["Suka Maju", "Sinama Nenek", "Kasikan", "Bukit Kemuning", "Danau Lancang", "Kusau Makmur"],
+      "Salo": ["Salo", "Salo Timur", "Ganting", "Ganting Damai", "Siabu"],
+      "Kuok": ["Kuok", "Empat Balai", "Lereng", "Merangin", "PULAU TERAP", "Silam"],
+      "Kampar": ["Air Tiris", "Batu Belah", "Rumbio", "Limau Manis", "Nauman"],
+      "Kampa": ["Kampar", "Sawah Baru", "Pulau Birandang", "Koto Perambahan"]
+    };
+
+    let appSetupData = {}; 
+    let localArsipCache = []; 
+    let currentBankSheet = ""; 
+    let detailModalBootstrap;
+    let selectedRawFiles = [];
+    let existingLinksArray = [];
+
+    // Kunci spreadsheet (bukan URL asli - URL asli hanya ada di server/Code.gs
+    // dan baru diberikan setelah verifikasi ID & Password berhasil), sehingga
+    // tidak bisa dilihat lewat "View Page Source" / DevTools browser.
+    function ambilLinkFileAman(obj) {
+      if (!obj) return "";
+      return obj.linkFile || obj.linkfile || obj.LinkFile || obj.urlFile || obj.urlfile || "";
+    }
+
+    function parseFileEntry(entryStr) {
+      if (!entryStr) return { fileName: "", url: "" };
+      let str = entryStr.trim();
+      let parts = str.split("::");
+      if (parts.length >= 2) {
+        return { fileName: parts[0].trim(), url: parts.slice(1).join("::").trim() };
+      } else {
+        return { fileName: "", url: str };
+      }
+    }
+
+    // Cetak Laporan = mengekspor data ASLI dari Spreadsheet (sheet bank yang sedang
+    // dibuka) menjadi file PDF, dibatasi kolom A sampai M sesuai permintaan.
+    // Bukan lagi window.print() dari tampilan HTML.
+    function cetakLaporan() {
+      if (!currentBankSheet) {
+        Swal.fire('Perhatian', 'Silakan pilih bank terlebih dahulu.', 'warning');
+        return;
+      }
+      Swal.fire({
+        title: 'Menyiapkan Laporan PDF...',
+        html: '<p style="font-size:13px; color:#64748B;">Mengambil data langsung dari Spreadsheet (Kolom A - M), mohon tunggu.</p>',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (res && res.success) {
+            try {
+              const byteChars = atob(res.base64);
+              const byteNumbers = new Array(byteChars.length);
+              for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+              const byteArray = new Uint8Array(byteNumbers);
+              const blob = new Blob([byteArray], { type: res.mimeType || 'application/pdf' });
+              const blobUrl = URL.createObjectURL(blob);
+
+              Swal.close();
+              const win = window.open(blobUrl, '_blank');
+              if (!win) {
+                // Jika popup diblokir, tetap sediakan unduhan langsung.
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = res.fileName || 'Laporan.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+              }
+              setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
+            } catch (e) {
+              Swal.fire('Gagal', 'Gagal memproses file PDF: ' + e.toString(), 'error');
+            }
+          } else {
+            Swal.fire('Gagal', res ? res.message : 'Gagal membuat laporan PDF.', 'error');
+          }
+        })
+        .withFailureHandler(function(err) {
+          Swal.fire('Gagal', err.toString(), 'error');
+        })
+        .exportLaporanSertifikatPDF(currentBankSheet);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+      detailModalBootstrap = new bootstrap.Modal(document.getElementById('modalDetailBerkas'));
+      
+      var navBrandLinkEl = document.getElementById('navBrandLink');
+      if (navBrandLinkEl) navBrandLinkEl.addEventListener('click', function(e) { e.preventDefault(); showDashboard(); });
+      document.getElementById('btnKembaliDashboard').addEventListener('click', showDashboard);
+      document.getElementById('btnBatalForm').addEventListener('click', backToDataList);
+      document.getElementById('btnCetakLaporan').addEventListener('click', cetakLaporan);
+      
+      document.getElementById('formMasterBerkas').addEventListener('submit', function(e) {
+        e.preventDefault();
+        prosesSubmitData();
+      });
+
+      setupHeaderInfo();
+      loadApplicationData();
+    });
+
+    function setupHeaderInfo() {
+      var nama = sessionStorage.getItem('skn_nama_karyawan');
+      var elSalam = document.getElementById('salamPengguna');
+      if (elSalam) {
+        var span = elSalam.querySelector('span');
+        if (span) span.innerText = 'Masuk sebagai: ' + (nama || '-');
+      }
+
+      var idDays = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+      var idMonths = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+      function tick() {
+        var now = new Date();
+        var elHari = document.getElementById('headerHari');
+        var elJam = document.getElementById('headerJam');
+        var h = String(now.getHours()).padStart(2, '0');
+        var m = String(now.getMinutes()).padStart(2, '0');
+        var s = String(now.getSeconds()).padStart(2, '0');
+        if (elHari) elHari.innerText = idDays[now.getDay()] + ", " + now.getDate() + " " + idMonths[now.getMonth()] + " " + now.getFullYear();
+        if (elJam) elJam.innerText = h + ":" + m + ":" + s + " WIB";
+      }
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    function showDashboard() {
+      document.getElementById('viewDashboard').style.display = "block";
+      document.getElementById('viewDataBank').style.display = "none";
+      document.getElementById('viewFormBerkas').style.display = "none";
+      clearSearchDashboardGlobal();
+    }
+
+    // ==================== PENCARIAN GLOBAL DI HALAMAN AWAL (CARD BANK) ====================
+    let timerSearchDashboard = null;
+
+    function handleSearchDashboardGlobal() {
+      clearTimeout(timerSearchDashboard);
+      const keyword = document.getElementById('searchDashboardGlobal').value.trim();
+      document.getElementById('btnClearSearchDashboard').style.display = keyword ? "block" : "none";
+
+      if (keyword === "") {
+        document.getElementById('containerBankCards').style.display = "";
+        document.getElementById('containerHasilPencarianGlobal').style.display = "none";
+        document.getElementById('containerHasilPencarianGlobal').innerHTML = "";
+        return;
+      }
+      timerSearchDashboard = setTimeout(() => executeSearchDashboardGlobal(keyword), 400);
+    }
+
+    function clearSearchDashboardGlobal() {
+      const input = document.getElementById('searchDashboardGlobal');
+      if (input) input.value = "";
+      const btnClear = document.getElementById('btnClearSearchDashboard');
+      if (btnClear) btnClear.style.display = "none";
+      const containerBank = document.getElementById('containerBankCards');
+      const containerHasil = document.getElementById('containerHasilPencarianGlobal');
+      if (containerBank) containerBank.style.display = "";
+      if (containerHasil) { containerHasil.style.display = "none"; containerHasil.innerHTML = ""; }
+    }
+
+    function executeSearchDashboardGlobal(keyword) {
+      document.getElementById('containerBankCards').style.display = "none";
+      const hasilContainer = document.getElementById('containerHasilPencarianGlobal');
+      hasilContainer.style.display = "";
+      hasilContainer.innerHTML = `<div class="col-12 text-center py-4 text-muted"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Mencari data di semua bank...</div>`;
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          // Pastikan hasil ini masih relevan (keyword belum berubah lagi selagi menunggu server).
+          const keywordSekarang = document.getElementById('searchDashboardGlobal').value.trim();
+          if (keywordSekarang !== keyword) return;
+
+          if (res && res.success) {
+            renderHasilPencarianGlobal(res.hasil || [], keyword);
+          } else {
+            hasilContainer.innerHTML = `<div class="col-12 text-center py-4 text-danger">Gagal melakukan pencarian: ${res ? res.message : 'Terjadi kesalahan.'}</div>`;
+          }
+        })
+        .withFailureHandler(function(err) {
+          hasilContainer.innerHTML = `<div class="col-12 text-center py-4 text-danger">Gagal melakukan pencarian: ${err.toString()}</div>`;
+        })
+        .cariGlobalSertifikat(keyword);
+    }
+
+    function renderHasilPencarianGlobal(dataArr, keyword) {
+      const hasilContainer = document.getElementById('containerHasilPencarianGlobal');
+      hasilContainer.innerHTML = "";
+
+      const infoCol = document.createElement('div');
+      infoCol.className = "col-12 mb-1";
+      infoCol.innerHTML = `<p class="text-muted small mb-2"><i class="fa-solid fa-circle-info me-1"></i>Ditemukan <b>${dataArr.length}</b> berkas untuk kata kunci "<b>${keyword.replace(/</g,'&lt;')}</b>"</p>`;
+      hasilContainer.appendChild(infoCol);
+
+      if (!dataArr || dataArr.length === 0) {
+        const noData = document.createElement('div');
+        noData.className = "col-12 text-center py-5 text-muted";
+        noData.innerHTML = `<i class="fa-solid fa-folder-open fa-2x mb-2 d-block"></i>Tidak ada berkas yang cocok dengan kata kunci tersebut.`;
+        hasilContainer.appendChild(noData);
+        return;
+      }
+
+      dataArr.forEach(row => {
+        const col = document.createElement('div');
+        col.className = "col-12 col-md-4 col-lg-3";
+
+        const card = document.createElement('div');
+        card.className = "card sertifikat-cover-card h-100 shadow-sm";
+        card.style.cursor = "pointer";
+        card.addEventListener('click', function() { bukaHasilPencarianGlobal(row.bankSheet, row.no); });
+
+        const body = document.createElement('div');
+        body.className = "card-body p-3";
+
+        const bankAsalLabel = (row.bankSheet || '-').toString().toUpperCase();
+        const statusClass = row.proses === "Selesai" ? "badge-selesai" : "badge-proses";
+
+        body.innerHTML = `
+          <div class="mb-2"><span class="badge bg-primary text-wrap w-100 py-1 shadow-sm" style="font-size:10.5px;"><i class="fa-solid fa-building-columns me-1"></i>DARI: ${bankAsalLabel}</span></div>
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="badge bg-light text-dark border font-monospace small">ID: ${row.no}</span>
+            <span class="badge ${statusClass}" style="font-size:10px;">${row.proses || '-'}</span>
+          </div>
+          <div class="text-muted small" style="font-size:10px;"><i class="fa-solid fa-user me-1"></i>NAMA DEBITUR:</div>
+          <h6 class="fw-bold text-primary mb-2 text-truncate">${row.namaDebitur || '-'}</h6>
+          <div class="text-muted small" style="font-size:10px;"><i class="fa-solid fa-id-card-clip me-1"></i>NAMA PEMILIK SERTIFIKAT:</div>
+          <h6 class="fw-bold text-dark mb-2 text-truncate">${row.namaPemilik || '-'}</h6>
+          <div class="bg-light p-2 rounded border">
+            <div class="small text-secondary fw-semibold mb-1" style="font-size:11px;"><i class="fa-solid fa-file-contract me-1"></i>Hak: <b>${row.jenisHak || '-'}</b></div>
+            <div class="font-monospace small text-primary fw-bold text-truncate"><i class="fa-solid fa-hashtag me-1"></i>${row.noSertifikat || '-'}</div>
+          </div>
+        `;
+
+        card.appendChild(body);
+        col.appendChild(card);
+        hasilContainer.appendChild(col);
+      });
+    }
+
+    // Membuka card hasil pencarian global: muat data bank aslinya lalu langsung
+    // tampilkan detail berkas yang dipilih (memakai jalur yang sama seperti biasa,
+    // sehingga fitur Edit / Selesaikan Berkas tetap berfungsi normal).
+    function bukaHasilPencarianGlobal(bankSheet, no) {
+      loadPageBank(bankSheet, no);
+    }
+
+    function backToDataList() {
+      document.getElementById('viewFormBerkas').style.display = "none";
+      document.getElementById('viewDataBank').style.display = "block";
+    }
+
+    function loadApplicationData() {
+      document.getElementById('loadingText').innerText = "Memuat data aplikasi...";
+      document.getElementById('loadingOverlay').style.display = "flex";
+      google.script.run
+        .withSuccessHandler(function(res) {
+          document.getElementById('loadingOverlay').style.display = "none";
+          if (res && res.success) {
+            appSetupData = res.setupData || { jenisHak: [], proses: [], penanggungJawab: [] };
+            renderBankCards(res.listBank || []);
+            setupDropdownsAndAutocompletes();
+          } else {
+            Swal.fire("Error", "Gagal mengambil data sistem.", "error");
+          }
+        })
+        .withFailureHandler(function(err) {
+          document.getElementById('loadingOverlay').style.display = "none";
+          Swal.fire("Koneksi Gagal", err.toString(), "error");
+        })
+        .INITIALIZE_APP_DATA();
+    }
+
+    function renderBankCards(bankArr) {
+      const container = document.getElementById('containerBankCards');
+      container.innerHTML = "";
+  
+      if (Array.isArray(bankArr)) {
+        bankArr.forEach(bankItem => {
+          try {
+            let bank = typeof bankItem === 'object' ? bankItem.name : bankItem;
+            if (!bank || typeof bank !== 'string') return;
+
+            const col = document.createElement('div');
+            col.className = "col-12 col-md-4 col-lg-3";
+
+            const card = document.createElement('div');
+            card.className = "card bank-card shadow-sm h-100";
+        
+            const isSelesai = bank.toUpperCase() === "BERKAS SELESAI";
+            const isBRKS = bank.toUpperCase().startsWith("BRKS");
+            const isBSI = bank.toUpperCase().startsWith("BSI");
+
+            if (isSelesai) {
+              card.classList.add("border-start", "border-success", "border-4", "bg-success", "bg-opacity-10"); 
+            } else if (isBRKS) { 
+              card.classList.add("border-start", "border-success", "border-4"); 
+            } else if (isBSI) { 
+              card.classList.add("border-start", "border-info", "border-4"); 
+            } else { 
+              card.classList.add("border-start", "border-secondary", "border-4"); 
+            }
+        
+            card.addEventListener('click', function() { loadPageBank(bank); });
+
+            const cardBody = document.createElement('div');
+            cardBody.className = "card-body p-3 d-flex align-items-center";
+
+            if (isSelesai) {
+              const icon = document.createElement('i');
+              icon.className = "fa-solid fa-circle-check fa-2x text-success me-3";
+              cardBody.appendChild(icon);
+            } else if (isBRKS || isBSI) {
+              const img = document.createElement('img');
+              img.className = "card-logo-img me-3";
+              img.alt = bank;
+              img.src = isBRKS 
+                ? "https://lh3.googleusercontent.com/d/1wvF390UnNBnSjtkv8KahVgNxtyru6ikK" 
+                : "https://lh3.googleusercontent.com/d/10Jl4zVmJqByP80svJJ0eswNhKQItrMYi";
+              cardBody.appendChild(img);
+            } else {
+              const icon = document.createElement('i');
+              icon.className = "fa-solid fa-building-columns fa-2x text-muted me-3";
+              cardBody.appendChild(icon);
+            }
+
+            const txtDiv = document.createElement('div');
+            const h6 = document.createElement('h6');
+            h6.className = "fw-bold m-0 text-dark";
+            h6.style.fontSize = "0.95rem";
+            h6.textContent = bank;
+
+            const small = document.createElement('small');
+            small.className = "text-muted";
+            small.style.fontSize = "11px";
+            small.textContent = "Klik untuk kelola berkas";
+
+            txtDiv.appendChild(h6);
+            txtDiv.appendChild(small);
+            cardBody.appendChild(txtDiv);
+            card.appendChild(cardBody);
+            col.appendChild(card);
+            container.appendChild(col);
+          } catch(err) { console.error(err); }
+        });
+      }
+  
+      const colAdd = document.createElement('div');
+      colAdd.className = "col-12 col-md-4 col-lg-3";
+      const cardAdd = document.createElement('div');
+      cardAdd.className = "card bank-card add-bank-card h-100 d-flex align-items-center justify-content-center p-3";
+      cardAdd.addEventListener('click', klikTambahBankBaru);
+
+      const centerDiv = document.createElement('div');
+      centerDiv.className = "text-center text-secondary";
+      const iconAdd = document.createElement('i');
+      iconAdd.className = "fa-solid fa-circle-plus fa-xl mb-1 text-primary";
+      const labelAdd = document.createElement('div');
+      labelAdd.className = "fw-bold small";
+      labelAdd.textContent = "Tambah Jenis Card";
+
+      centerDiv.appendChild(iconAdd);
+      centerDiv.appendChild(labelAdd);
+      cardAdd.appendChild(centerDiv);
+      colAdd.appendChild(cardAdd);
+      container.appendChild(colAdd);
+    }
+
+    function klikTambahBankBaru() {
+      Swal.fire({
+        title: 'Tambah Jenis Card',
+        input: 'text',
+        inputLabel: 'Masukkan Nama Cabang Bank Baru:',
+        showCancelButton: true,
+        inputValidator: (value) => { if (!value) return 'Tidak boleh kosong!' }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          document.getElementById('loadingText').innerText = "Menambahkan bank baru...";
+          document.getElementById('loadingOverlay').style.display = "flex";
+          google.script.run
+            .withSuccessHandler(function(res) {
+              document.getElementById('loadingOverlay').style.display = "none";
+              if (res.success) {
+                Swal.fire("Berhasil", res.message, "success");
+                loadApplicationData();
+              } else { Swal.fire("Gagal", res.message, "error"); }
+            })
+            .tambahBankBaru(result.value);
+        }
+      });
+    }
+
+    function setupDropdownsAndAutocompletes() {
+      const listKecSearch = document.getElementById('datalistKecamatanSearch');
+      const listKecForm = document.getElementById('datalistKecamatanForm');
+      
+      listKecSearch.innerHTML = ""; 
+      if(listKecForm) listKecForm.innerHTML = ""; 
+
+      Object.keys(DATA_WILAYAH_RIAU).sort().forEach(kec => {
+        const optSearch = document.createElement('option');
+        optSearch.value = kec;
+        listKecSearch.appendChild(optSearch);
+
+        if(listKecForm) {
+          const optForm = document.createElement('option');
+          optForm.value = kec;
+          listKecForm.appendChild(optForm);
+        }
+      });
+
+      if (appSetupData.jenisHak) {
+        const selJenisHak = document.getElementById('inpJenisHak');
+        selJenisHak.innerHTML = `<option value="">-- Pilih Jenis Hak --</option>`;
+        appSetupData.jenisHak.forEach(val => {
+          const opt = document.createElement('option'); opt.value = val; opt.textContent = val;
+          selJenisHak.appendChild(opt);
+        });
+      }
+
+      if (appSetupData.proses) {
+        const selProses = document.getElementById('inpProses');
+        selProses.innerHTML = `<option value="">-- Pilih Status Proses --</option>`;
+        appSetupData.proses.forEach(val => {
+          const opt = document.createElement('option'); opt.value = val; opt.textContent = val;
+          selProses.appendChild(opt);
+        });
+        const optLain = document.createElement('option'); optLain.value = "Lainnya"; optLain.textContent = "Lainnya";
+        selProses.appendChild(optLain);
+      }
+
+      if (appSetupData.penanggungJawab) {
+        const selPj = document.getElementById('inpPenanggungJawab');
+        selPj.innerHTML = `<option value="">-- Pilih Penanggung Jawab --</option>`;
+        appSetupData.penanggungJawab.forEach(val => {
+          const opt = document.createElement('option'); opt.value = val; opt.textContent = val;
+          selPj.appendChild(opt);
+        });
+      }
+    }
+
+    function handleKecamatanFormChange() {
+      const kecVal = document.getElementById('inpKecamatan').value;
+      const datalistKel = document.getElementById('datalistKelurahanForm');
+      
+      datalistKel.innerHTML = ""; 
+      
+      if (DATA_WILAYAH_RIAU[kecVal]) {
+        DATA_WILAYAH_RIAU[kecVal].forEach(desa => {
+          const opt = document.createElement('option'); 
+          opt.value = desa;
+          datalistKel.appendChild(opt);
+        });
+      }
+    }
+
+    function handleProsesDropdownChange() {
+      const val = document.getElementById('inpProses').value;
+      const inpLainnya = document.getElementById('inpProsesLainnya');
+      if (val === "Lainnya") {
+        inpLainnya.style.display = "block";
+        inpLainnya.setAttribute("required", "true");
+      } else {
+        inpLainnya.style.display = "none";
+        inpLainnya.removeAttribute("required");
+      }
+    }
+
+    function loadPageBank(bankName, focusId) {
+      currentBankSheet = bankName;
+      
+      const titleElem = document.getElementById('titleNamaBank');
+      const logoContainer = document.getElementById('headerBankLogoContainer');
+      
+      titleElem.innerText = bankName;
+      logoContainer.innerHTML = "";
+
+      const bankUpper = bankName.toUpperCase();
+      const isSelesai = bankUpper === "BERKAS SELESAI";
+      const isBRKS = bankUpper.startsWith("BRKS");
+      const isBSI = bankUpper.startsWith("BSI");
+
+      if (isSelesai) {
+        logoContainer.innerHTML = `<i class="fa-solid fa-circle-check fa-2x text-success"></i>`;
+      } else if (isBRKS) {
+        logoContainer.innerHTML = `<img src="https://lh3.googleusercontent.com/d/1wvF390UnNBnSjtkv8KahVgNxtyru6ikK" alt="BRK Syariah" style="height: 40px; width: auto; object-fit: contain;">`;
+      } else if (isBSI) {
+        logoContainer.innerHTML = `<img src="https://lh3.googleusercontent.com/d/10Jl4zVmJqByP80svJJ0eswNhKQItrMYi" alt="BSI" style="height: 40px; width: auto; object-fit: contain;">`;
+      } else {
+        logoContainer.innerHTML = `<i class="fa-solid fa-building-columns fa-2x text-secondary"></i>`;
+      }
+
+      document.getElementById('btnBukaFormEntri').onclick = function() { bukaFormEntriBaru(bankName); };
+      
+      document.getElementById('loadingText').innerText = "Mengambil data berkas...";
+      document.getElementById('loadingOverlay').style.display = "flex";
+      
+      google.script.run
+        .withSuccessHandler(function(data) {
+          document.getElementById('loadingOverlay').style.display = "none";
+          localArsipCache = data || [];
+          renderArsipCards(localArsipCache);
+          document.getElementById('viewDashboard').style.display = "none";
+          document.getElementById('viewDataBank').style.display = "block";
+          if (focusId) {
+            bukaDetailModalArsip(focusId);
+          }
+        })
+        .getDataBank(bankName);
+    } 
+    
+    function renderArsipCards(dataArr) {
+      const grid = document.getElementById('gridSertifikatCards');
+      grid.innerHTML = "";
+      
+      if (!dataArr || dataArr.length === 0) {
+        const noData = document.createElement('div');
+        noData.className = "col-12 text-center py-5 text-muted";
+        noData.innerHTML = `<i class="fa-solid fa-folder-open fa-2x mb-2 d-block"></i>Belum ada data berkas.`;
+        grid.appendChild(noData);
+        return;
+      }
+      
+      const isSheetBerkasSelesai = currentBankSheet.toUpperCase() === "BERKAS SELESAI";
+
+      dataArr.forEach(row => {
+        const col = document.createElement('div');
+        col.className = "col-12 col-md-4 col-lg-3";
+
+        const card = document.createElement('div');
+        card.className = "card sertifikat-cover-card h-100 shadow-sm d-flex flex-column justify-content-between";
+        card.addEventListener('click', function() {
+          bukaDetailModalArsip(row.no);
+        });
+
+        const body = document.createElement('div');
+        body.className = "card-body p-3";
+
+        if (isSheetBerkasSelesai) {
+          const bankAsal = row.keterangan || "UMUM";
+          const labelAsal = document.createElement('div');
+          labelAsal.className = "mb-2";
+          labelAsal.innerHTML = `<span class="badge bg-primary text-wrap w-100 py-1 shadow-sm" style="font-size:10.5px;"><i class="fa-solid fa-building-columns me-1"></i>DARI : ${bankAsal.toUpperCase()}</span>`;
+          body.appendChild(labelAsal);
+        }
+
+        const headDiv = document.createElement('div');
+        headDiv.className = "d-flex justify-content-between align-items-start mb-2";
+
+        const bId = document.createElement('span');
+        bId.className = "badge bg-light text-dark border font-monospace small";
+        bId.textContent = "ID: " + row.no;
+
+        const bStatus = document.createElement('span');
+        bStatus.className = "badge " + (row.proses === "Selesai" ? "badge-selesai" : "badge-proses");
+        bStatus.style.fontSize = "10px";
+        bStatus.textContent = row.proses;
+
+        headDiv.appendChild(bId);
+        headDiv.appendChild(bStatus);
+
+        const lblDebitur = document.createElement('div');
+        lblDebitur.className = "text-muted small";
+        lblDebitur.style.fontSize = "10px";
+        lblDebitur.innerHTML = `<i class="fa-solid fa-user me-1"></i>NAMA DEBITUR:`;
+
+        const h6Debitur = document.createElement('h6');
+        h6Debitur.className = "fw-bold text-primary mb-2 text-truncate";
+        h6Debitur.textContent = row.namaDebitur || "-";
+
+        const lblPemilik = document.createElement('div');
+        lblPemilik.className = "text-muted small";
+        lblPemilik.style.fontSize = "10px";
+        lblPemilik.innerHTML = `<i class="fa-solid fa-id-card-clip me-1"></i>NAMA PEMILIK SERTIFIKAT:`;
+
+        const h6Pemilik = document.createElement('h6');
+        h6Pemilik.className = "fw-bold text-dark mb-2 text-truncate";
+        h6Pemilik.textContent = row.namaPemilik || "-";
+
+        const bgLight = document.createElement('div');
+        bgLight.className = "bg-light p-2 rounded mb-2 border";
+        
+        const divHak = document.createElement('div');
+        divHak.className = "small text-secondary fw-semibold mb-1";
+        divHak.style.fontSize = "11px";
+        divHak.innerHTML = `<i class="fa-solid fa-file-contract me-1"></i>Hak: <b>${row.jenisHak || '-'}</b>`;
+
+        const fMono = document.createElement('div');
+        fMono.className = "font-monospace small text-primary fw-bold text-truncate";
+        fMono.innerHTML = `<i class="fa-solid fa-hashtag me-1"></i>${row.noSertifikat || '-'}`;
+        
+        bgLight.appendChild(divHak);
+        bgLight.appendChild(fMono);
+
+        body.appendChild(headDiv);
+        body.appendChild(lblDebitur);
+        body.appendChild(h6Debitur);
+        body.appendChild(lblPemilik);
+        body.appendChild(h6Pemilik);
+        body.appendChild(bgLight);
+
+        const linkFileVal = ambilLinkFileAman(row);
+        if (linkFileVal && linkFileVal.trim() !== "") {
+          const downloadArea = document.createElement('div');
+          downloadArea.className = "card-download-area";
+          
+          linkFileVal.split(/,\s*/).forEach((entry, index) => {
+            if(!entry || entry.trim() === "") return;
+            let parsed = parseFileEntry(entry);
+            let label = parsed.fileName ? parsed.fileName : `Berkas ${index + 1}`;
+
+            const btnLink = document.createElement('a');
+            btnLink.href = parsed.url;
+            btnLink.target = "_blank";
+            btnLink.className = "badge bg-primary text-decoration-none text-white p-1 text-truncate";
+            btnLink.style.fontSize = "9px";
+            btnLink.style.maxWidth = "100%";
+            btnLink.innerHTML = `<i class="fa-solid fa-file-arrow-down me-1"></i>${label}`;
+            
+            btnLink.addEventListener('click', function(e) {
+              e.stopPropagation();
+            });
+            downloadArea.appendChild(btnLink);
+          });
+          body.appendChild(downloadArea);
+        }
+
+        const footerArea = document.createElement('div');
+        footerArea.className = "p-2 border-top bg-light mt-auto d-flex flex-column gap-1";
+        
+        if (row.proses !== "Selesai") {
+          const btnSelesaiAksi = document.createElement('button');
+          btnSelesaiAksi.className = "btn btn-sm btn-success w-100 fw-bold py-1";
+          btnSelesaiAksi.style.fontSize = "11px";
+          btnSelesaiAksi.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i>Berkas Selesai`;
+          btnSelesaiAksi.addEventListener('click', function(e) {
+            e.stopPropagation();
+            aksiSelesaikanBerkasOtomatis(row.no);
+          });
+          footerArea.appendChild(btnSelesaiAksi);
+        }
+
+        const ujDiv = document.createElement('div');
+        ujDiv.className = "mt-2 text-end text-muted font-monospace";
+        ujDiv.style.fontSize = "10px";
+        ujDiv.textContent = "PJ: " + row.penanggungJawab;
+        
+        footerArea.appendChild(ujDiv);
+
+        card.appendChild(body);
+        card.appendChild(footerArea);
+        col.appendChild(card);
+        grid.appendChild(col);
+      });
+    }
+
+    function filterArsipCards() {
+      const qGlobal = document.getElementById('searchGlobal').value.toLowerCase();
+      const qKec = document.getElementById('searchKecamatan').value.toLowerCase();
+      const qKel = document.getElementById('searchKelurahan').value.toLowerCase();
+      
+      const filtered = localArsipCache.filter(item => {
+        const matchGlobal = !qGlobal || item.namaPemilik.toLowerCase().includes(qGlobal) || item.namaDebitur.toLowerCase().includes(qGlobal) || item.noSertifikat.toLowerCase().includes(qGlobal);
+        const matchKec = !qKec || item.kecamatan.toLowerCase().includes(qKec);
+        const matchKel = !qKel || item.kelurahan.toLowerCase().includes(qKel);
+        return matchGlobal && matchKec && matchKel;
+      });
+      renderArsipCards(filtered);
+    }
+
+    function handleFileSelectionChange() {
+      const fileInput = document.getElementById('inpFileSertifikat');
+      if (fileInput.files.length === 0) return;
+      
+      const filesArr = Array.from(fileInput.files);
+      filesArr.forEach(file => {
+        selectedRawFiles.push({
+          idTemp: Date.now() + Math.random().toString(36).substr(2, 5),
+          rawFile: file
+        });
+      });
+      
+      renderFileUploadPreviewList();
+      fileInput.value = ""; 
+    }
+
+    function renderFileUploadPreviewList() {
+      const previewList = document.getElementById('fileUploadPreviewList');
+      if (!previewList) return;
+      previewList.innerHTML = "";
+      
+      if (selectedRawFiles.length > 0) {
+        previewList.style.display = "block";
+        let htmlContent = `<div class="small fw-bold text-dark mb-1"><i class="fa-solid fa-list-check me-1"></i> File Siap Diunggah (${selectedRawFiles.length}):</div>`;
+        htmlContent += `<ul class="list-group border rounded p-1 bg-white" style="max-height: 160px; overflow-y: auto;">`;
+        
+        selectedRawFiles.forEach((item, index) => {
+          let file = item.rawFile;
+          let fileIcon = file.type.includes("pdf") ? "fa-file-pdf text-danger" : "fa-file-image text-success";
+          let fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+          
+          htmlContent += `
+            <li class="list-group-item py-1 px-2 d-flex justify-content-between align-items-center small">
+              <span class="text-truncate" style="max-width: 85%;"><i class="fa-solid ${fileIcon} me-2"></i>${index + 1}. ${file.name} <span class="badge bg-secondary font-monospace border ms-1">${fileSizeMB} MB (Awal)</span></span>
+              <span class="btn-delete-file px-1" onclick="hapusFileDariAntrean('${item.idTemp}')" title="Hapus berkas ini"><i class="fa-solid fa-trash-can"></i></span>
+            </li>
+          `;
+        });
+        htmlContent += `</ul>`;
+        previewList.innerHTML = htmlContent;
+      } else {
+        previewList.style.display = "none";
+      }
+    }
+
+    function hapusFileDariAntrean(idTemp) {
+      selectedRawFiles = selectedRawFiles.filter(item => item.idTemp !== idTemp);
+      renderFileUploadPreviewList();
+    }
+
+    async function compressFileToMax5MB(file) {
+      const MAX_BYTES = 5 * 1024 * 1024;
+      
+      if (file.type.startsWith("image/")) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+              let canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              let quality = 0.85;
+              
+              canvas.width = width;
+              canvas.height = height;
+              let ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              
+              let dataUrl = canvas.toDataURL('image/jpeg', quality);
+              
+              while (dataUrl.length * (3/4) > MAX_BYTES && quality > 0.1) {
+                quality -= 0.1;
+                width = Math.floor(width * 0.85);
+                height = Math.floor(height * 0.85);
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+                dataUrl = canvas.toDataURL('image/jpeg', quality);
+              }
+              
+              resolve({
+                fileName: file.name,
+                base64: dataUrl
+              });
+            };
+            img.onerror = (err) => reject(err);
+          };
+          reader.onerror = (err) => reject(err);
+        });
+      } 
+      else {
+        if (file.size > MAX_BYTES) {
+          throw new Error(`File PDF "${file.name}" berukuran ${(file.size/(1024*1024)).toFixed(1)} MB (Melebihi batas 5 MB). Harap kompres file PDF secara mandiri.`);
+        }
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve({ fileName: file.name, base64: e.target.result });
+          reader.onerror = (e) => reject(e);
+          reader.readAsDataURL(file);
+        });
+      }
+    }
+
+    function bukaFormEntriBaru(bankName) {
+      document.getElementById('formMasterBerkas').reset();
+      document.getElementById('formIdBerkas').value = "";
+      document.getElementById('formSheetName').value = bankName;
+      document.getElementById('inpTanggalTerima').value = new Date().toISOString().split('T')[0];
+      document.getElementById('inpTanggalSelesai').value = "";
+      
+      document.getElementById('containerExistingFiles').style.display = "none";
+      document.getElementById('listExistingFiles').innerHTML = "";
+      
+      selectedRawFiles = [];
+      existingLinksArray = [];
+      renderFileUploadPreviewList();
+
+      document.getElementById('formActionTitle').innerHTML = `<i class="fa-solid fa-plus me-2"></i>Entri Berkas Baru - <b>${bankName}</b>`;
+      document.getElementById('viewDataBank').style.display = "none";
+      document.getElementById('viewFormBerkas').style.display = "block";
+    }
+
+    function bukaFormEditData(id) {
+      const item = localArsipCache.find(x => x.no.toString() === id.toString());
+      if (!item) return;
+
+      if (detailModalBootstrap) detailModalBootstrap.hide();
+
+      document.getElementById('formMasterBerkas').reset();
+      document.getElementById('formIdBerkas').value = item.no;
+      document.getElementById('formSheetName').value = currentBankSheet;
+
+      document.getElementById('inpTanggalTerima').value = item.tanggalTerima || "";
+      document.getElementById('inpTanggalSelesai').value = item.tanggalSelesai || "";
+      document.getElementById('inpDebitur').value = item.namaDebitur || "";
+      document.getElementById('inpPemilik').value = item.namaPemilik || "";
+      document.getElementById('inpNoHp').value = item.noHp || "";
+      document.getElementById('inpJenisHak').value = item.jenisHak || "";
+      document.getElementById('inpNoSertifikat').value = item.noSertifikat || "";
+
+      document.getElementById('inpKecamatan').value = item.kecamatan || "";
+      handleKecamatanFormChange();
+      document.getElementById('inpKelurahan').value = item.kelurahan || "";
+
+      const selProses = document.getElementById('inpProses');
+      const inpLainnya = document.getElementById('inpProsesLainnya');
+      
+      let isOptionExist = false;
+      for (let i = 0; i < selProses.options.length; i++) {
+        if (selProses.options[i].value === item.proses) {
+          isOptionExist = true;
+          break;
+        }
+      }
+
+      if (isOptionExist) {
+        selProses.value = item.proses;
+        inpLainnya.style.display = "none";
+        inpLainnya.removeAttribute("required");
+      } else {
+        selProses.value = "Lainnya";
+        inpLainnya.value = item.proses;
+        inpLainnya.style.display = "block";
+        inpLainnya.setAttribute("required", "true");
+      }
+
+      document.getElementById('inpKeterangan').value = item.keterangan || "";
+      document.getElementById('inpPenanggungJawab').value = item.penanggungJawab || "";
+
+      selectedRawFiles = [];
+      renderFileUploadPreviewList();
+
+      const linkFileVal = ambilLinkFileAman(item);
+      const containerExisting = document.getElementById('containerExistingFiles');
+      const listExisting = document.getElementById('listExistingFiles');
+      listExisting.innerHTML = "";
+      existingLinksArray = [];
+
+      if (linkFileVal && linkFileVal.trim() !== "") {
+        existingLinksArray = linkFileVal.split(/,\s*/).filter(String);
+        containerExisting.style.display = "block";
+
+        existingLinksArray.forEach((entry, idx) => {
+          let parsed = parseFileEntry(entry);
+          let namaFile = parsed.fileName ? parsed.fileName : `Berkas ${idx + 1}`;
+          let li = document.createElement('li');
+          li.className = "list-group-item py-1 px-2 d-flex justify-content-between align-items-center small";
+          li.innerHTML = `
+            <span class="text-truncate" style="max-width: 80%;"><i class="fa-solid fa-paperclip text-primary me-2"></i>${namaFile}</span>
+            <div>
+              <a href="${parsed.url}" target="_blank" class="btn btn-xs btn-outline-primary py-0 px-2 me-1" style="font-size: 10px;">Buka</a>
+              <span class="btn-delete-file px-1" onclick="hapusFileLamaDisimpan(${idx})" title="Hapus file lampiran lama ini"><i class="fa-solid fa-trash-can"></i></span>
+            </div>
+          `;
+          listExisting.appendChild(li);
+        });
+      } else {
+        containerExisting.style.display = "none";
+      }
+
+      document.getElementById('formActionTitle').innerHTML = `<i class="fa-solid fa-pen-to-square me-2"></i>Edit Data Berkas (ID: ${item.no}) - <b>${currentBankSheet}</b>`;
+      document.getElementById('viewDataBank').style.display = "none";
+      document.getElementById('viewFormBerkas').style.display = "block";
+    }
+
+    function hapusFileLamaDisimpan(index) {
+      existingLinksArray.splice(index, 1);
+      const listExisting = document.getElementById('listExistingFiles');
+      listExisting.removeChild(listExisting.children[index]);
+      
+      for(let i = 0; i < listExisting.children.length; i++) {
+        let btnDel = listExisting.children[i].querySelector('.btn-delete-file');
+        if (btnDel) {
+          btnDel.setAttribute('onclick', `hapusFileLamaDisimpan(${i})`);
+        }
+      }
+      
+      if (existingLinksArray.length === 0) {
+        document.getElementById('containerExistingFiles').style.display = "none";
+      }
+    }
+
+    async function prosesSubmitData() {
+      const idBerkas = document.getElementById('formIdBerkas').value;
+      const sheetName = document.getElementById('formSheetName').value;
+      
+      let valProses = document.getElementById('inpProses').value;
+      if (valProses === "Lainnya") {
+        valProses = document.getElementById('inpProsesLainnya').value;
+      }
+
+      const formData = {
+        tanggalTerima: document.getElementById('inpTanggalTerima').value,
+        namaDebitur: document.getElementById('inpDebitur').value,
+        namaPemilik: document.getElementById('inpPemilik').value,
+        noHp: document.getElementById('inpNoHp').value,
+        jenisHak: document.getElementById('inpJenisHak').value,
+        noSertifikat: document.getElementById('inpNoSertifikat').value,
+        kecamatan: document.getElementById('inpKecamatan').value,
+        kelurahan: document.getElementById('inpKelurahan').value,
+        proses: valProses,
+        keterangan: document.getElementById('inpKeterangan').value,
+        penanggungJawab: document.getElementById('inpPenanggungJawab').value
+      };
+
+      document.getElementById('loadingText').innerText = "Mengompresi file otomatis (Maksimal 5MB)...";
+      document.getElementById('loadingOverlay').style.display = "flex";
+
+      let compressedFilesForServer = [];
+
+      try {
+        for (let i = 0; i < selectedRawFiles.length; i++) {
+          document.getElementById('loadingText').innerText = `Mengompresi file (${i + 1}/${selectedRawFiles.length}) ke <= 5MB...`;
+          let res = await compressFileToMax5MB(selectedRawFiles[i].rawFile);
+          compressedFilesForServer.push(res);
+        }
+      } catch (errCompress) {
+        document.getElementById('loadingOverlay').style.display = "none";
+        Swal.fire("Gagal Kompresi", errCompress.message || errCompress.toString(), "error");
+        return;
+      }
+
+      document.getElementById('loadingText').innerText = "MENYIMPAN DATA YANG TELAH DI ENTRI";
+      window._lastFormDataSertifikat = formData;
+      window._lastSheetNameSertifikat = sheetName;
+
+      if (idBerkas) {
+        google.script.run
+          .withSuccessHandler(handleFormResult)
+          .withFailureHandler(handleFormError)
+          .updateDataEntri(sheetName, idBerkas, formData, compressedFilesForServer, existingLinksArray);
+      } else {
+        google.script.run
+          .withSuccessHandler(handleFormResult)
+          .withFailureHandler(handleFormError)
+          .simpanEntriBaru(sheetName, formData, compressedFilesForServer);
+      }
+    }
+
+    function handleFormResult(res) {
+      document.getElementById('loadingOverlay').style.display = "none";
+      if (res && res.success) {
+        tampilkanNotifikasiSuksesSertifikat(res.message);
+      } else {
+        Swal.fire("Gagal", res ? res.message : "Terjadi kesalahan.", "error");
+      }
+    }
+
+    // Notifikasi sukses bergaya sama dengan modul Pembukuan Kantor (tulisan bold besar)
+    function tampilkanNotifikasiSuksesSertifikat(pesanServer) {
+      const namaUser = sessionStorage.getItem('skn_nama_karyawan') || "ADMIN";
+      const fd = window._lastFormDataSertifikat || {};
+      const sheetName = window._lastSheetNameSertifikat || "-";
+      const templatePesan = `
+        <div style="font-size: 2.2rem; font-weight: 900; color: #16a34a; line-height: 1.1; text-align: center;">
+          SELAMAT ${namaUser}
+        </div>
+        <div style="font-size: 1.5rem; color: #334155; margin-top: 20px; text-align: center;">
+            ${pesanServer || 'Data berkas sertifikat berhasil disimpan.'}<br><br>
+          <div style="background: #f8fafc; padding: 20px; border-radius: 15px; border: 2px solid #e2e8f0; border-top: 8px solid #16a34a; text-align: center; display: inline-block; min-width: 80%;">
+            <div style="display: flex; justify-content: center; align-items: baseline; gap: 8px; margin-bottom: 10px;">
+              <span style="color: #1B3A6B; font-size: 1.5rem; font-weight: bold;">BANK/UMUM</span>
+              <span style="font-size: 1.5rem; font-weight: 900; color: #1B3A6B; text-transform: uppercase;">${sheetName}</span>
+            </div>
+            <div style="color: #1B3A6B; font-weight: bold; line-height: 1.6;">
+              <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 5px;">
+                 <span style="color: #1B3A6B;">DEBITUR</span> ${fd.namaDebitur || '-'}
+              </div>
+              <div>
+                 <span style="color: #1B3A6B;">NO SERTIFIKAT</span> ${fd.noSertifikat || '-'}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      Swal.fire({
+        html: templatePesan,
+        icon: 'success',
+        confirmButtonText: 'LANJUTKAN!',
+        confirmButtonColor: '#16a34a',
+        background: '#ffffff',
+        width: '600px',
+        backdrop: `rgba(0,0,0,0.6)`,
+        focusConfirm: false
+      }).then(() => {
+        backToDataList();
+        loadPageBank(currentBankSheet);
+      });
+    }
+
+    function handleFormError(err) {
+      document.getElementById('loadingOverlay').style.display = "none";
+      Swal.fire("Terjadi Kesalahan", err.toString(), "error");
+    }
+
+    function aksiSelesaikanBerkasOtomatis(id) {
+      Swal.fire({
+        title: "Konfirmasi Berkas Selesai",
+        text: "Apakah Anda yakin ingin memindahkan berkas ini ke 'BERKAS SELESAI'?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Ya, Selesaikan!",
+        cancelButtonText: "Batal"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          document.getElementById('loadingText').innerText = "Memindahkan berkas ke Berkas Selesai...";
+          document.getElementById('loadingOverlay').style.display = "flex";
+          google.script.run
+            .withSuccessHandler(function(res) {
+              document.getElementById('loadingOverlay').style.display = "none";
+              if (res && res.success) {
+                Swal.fire("Selesai!", res.message, "success").then(() => {
+                  loadPageBank(currentBankSheet);
+                });
+              } else {
+                Swal.fire("Gagal", res.message, "error");
+              }
+            })
+            .setBerkasSelesai(currentBankSheet, id);
+        }
+      });
+    }
+
+    function bukaDetailModalArsip(id) {
+      const item = localArsipCache.find(x => x.no.toString() === id.toString());
+      if (!item) return;
+      
+      const bodyModal = document.getElementById('contentDetailModal');
+      const footerModal = document.getElementById('footerDetailModal');
+      
+      const linkFileVal = ambilLinkFileAman(item);
+      let fileLinksHtml = `<div class="alert alert-secondary small text-center mb-0"><i class="fa-solid fa-folder-open me-2"></i>Belum ada file lampiran untuk berkas ini.</div>`;
+      
+      if (linkFileVal && linkFileVal.trim() !== "") {
+        fileLinksHtml = `<div class="row g-2">`;
+        linkFileVal.split(/,\s*/).forEach((entry, idx) => {
+          if(entry.trim() !== "") {
+            let parsed = parseFileEntry(entry);
+            let namaFileTampil = parsed.fileName ? parsed.fileName : `Dokumen Lampiran ${idx + 1}`;
+            
+            let fileIcon = "fa-file-pdf text-danger";
+            if (namaFileTampil.toLowerCase().match(/\.(jpg|jpeg|png)$/) || parsed.url.toLowerCase().match(/\.(jpg|jpeg|png)$/)) {
+              fileIcon = "fa-file-image text-success";
+            }
+            
+            fileLinksHtml += `
+              <div class="col-md-6">
+                <div class="p-2 border border-dark rounded bg-white d-flex justify-content-between align-items-center shadow-sm">
+                  <span class="text-truncate me-2 fw-bold text-dark" style="max-width: 70%; font-size: 0.95rem;" title="${namaFileTampil}">
+                    <i class="fa-solid ${fileIcon} me-2"></i>${namaFileTampil}
+                  </span>
+                  <a href="${parsed.url}" target="_blank" class="btn btn-sm btn-dark px-3 fw-bold font-monospace" style="font-size: 0.85rem;">
+                    <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> BUKA
+                  </a>
+                </div>
+              </div>`;
+          }
+        });
+        fileLinksHtml += `</div>`;
+      }
+
+      bodyModal.innerHTML = `
+        <div class="row g-4 text-dark" style="font-size: 0.95rem;">
+          <!-- KOLOM 1: DATA SERTIFIKAT HAK -->
+          <div class="col-md-6">
+            <div class="bg-light p-3 rounded border border-dark border-2 h-100 shadow-sm">
+              <h6 class="fw-bold text-dark mb-3 border-bottom border-dark pb-2" style="font-size: 0.95rem;">
+                <i class="fa-solid fa-scroll me-2 text-dark"></i>Data Sertifikat Hak
+              </h6>
+              
+              <div class="mb-3">
+                <span class="d-block text-dark fw-bold" style="font-size: 0.85rem;">NAMA DEBITUR</span>
+                <span class="fw-bold text-dark" style="font-size: 0.95rem;">${item.namaDebitur || '-'}</span>
+              </div>
+              
+              <div class="mb-3">
+                <span class="d-block text-dark fw-bold" style="font-size: 0.85rem;">NAMA PEMILIK SERTIFIKAT</span>
+                <span class="fw-bold text-dark" style="font-size: 0.95rem;">${item.namaPemilik || '-'}</span>
+              </div>
+              
+              <div class="mb-3">
+                <span class="d-block text-dark fw-bold" style="font-size: 0.85rem;">JENIS HAK & NOMOR SERTIFIKAT</span>
+                <span class="fw-bold text-dark" style="font-size: 0.95rem;">
+                  <i class="fa-solid fa-file-contract me-1 text-dark"></i>${item.jenisHak || '-'} - ${item.noSertifikat || '-'}
+                </span>
+              </div>
+              
+              <div class="mb-3">
+                <span class="d-block text-dark fw-bold" style="font-size: 0.85rem;">NO HP / WHATSAPP</span>
+                <span class="fw-bold text-dark" style="font-size: 0.95rem;">
+                  <i class="fa-brands fa-whatsapp me-1 text-dark"></i>${item.noHp || '-'}
+                </span>
+              </div>
+              
+              <div class="mb-0">
+                <span class="d-block text-dark fw-bold" style="font-size: 0.85rem;">LETAK HAK</span>
+                <span class="fw-bold text-dark" style="font-size: 0.95rem;">
+                  <i class="fa-solid fa-location-dot me-1 text-dark"></i>Kelurahan/Desa ${item.kelurahan || '-'}, Kec. ${item.kecamatan || '-'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- KOLOM 2: PROGRES BERKAS -->
+          <div class="col-md-6">
+            <div class="bg-light p-3 rounded border border-dark border-2 h-100 shadow-sm">
+              <h6 class="fw-bold text-dark mb-3 border-bottom border-dark pb-2" style="font-size: 0.95rem;">
+                <i class="fa-solid fa-clock-rotate-left me-2 text-dark"></i>Progres Berkas
+              </h6>
+              
+              <div class="mb-3">
+                <span class="d-block text-dark fw-bold" style="font-size: 0.85rem;">STATUS PROSES SAAT INI</span>
+                <span class="badge bg-dark text-white px-3 py-2 mt-1 fw-bold" style="font-size: 0.95rem;">${item.proses || '-'}</span>
+              </div>
+              
+              <div class="mb-3">
+                <span class="d-block text-dark fw-bold" style="font-size: 0.85rem;">TANGGAL TERIMA SERTIFIKAT</span>
+                <span class="fw-bold text-dark" style="font-size: 0.95rem;">
+                  <i class="fa-regular fa-calendar-check me-1 text-dark"></i>${item.tanggalTerima || '-'}
+                </span>
+              </div>
+              
+              <div class="mb-3">
+                <span class="d-block text-dark fw-bold" style="font-size: 0.85rem;">PENANGGUNG JAWAB</span>
+                <span class="fw-bold text-dark" style="font-size: 0.95rem;">
+                  <i class="fa-solid fa-user-gear me-1 text-dark"></i>${item.penanggungJawab || '-'}
+                </span>
+              </div>
+              
+              <div class="mb-0">
+                <span class="d-block text-dark fw-bold" style="font-size: 0.85rem;">KETERANGAN TAMBAHAN</span>
+                <p class="text-dark fw-bold mb-0 bg-white p-2 rounded border border-dark mt-1" style="font-size: 0.95rem;">${item.keterangan || '-'}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- DOKUMEN LAMPIRAN -->
+          <div class="col-12">
+            <div class="border border-dark border-2 rounded p-3 bg-light">
+              <h6 class="fw-bold text-dark mb-3" style="font-size: 0.95rem;">
+                <i class="fa-solid fa-paperclip me-2 text-dark"></i>Lampiran Dokumen Sertifikat Digital
+              </h6>
+              ${fileLinksHtml}
+            </div>
+          </div>
+        </div>
+      `;
+
+      footerModal.innerHTML = `
+        <div>
+          <button type="button" class="btn btn-warning fw-bold text-dark" onclick="bukaFormEditData('${item.no}')">
+            <i class="fa-solid fa-pen-to-square me-1"></i> Edit Data
+          </button>
+        </div>
+        <div>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+        </div>
+      `;
+
+      detailModalBootstrap.show();
+    }
+  </script>
+</body>
+</html>
