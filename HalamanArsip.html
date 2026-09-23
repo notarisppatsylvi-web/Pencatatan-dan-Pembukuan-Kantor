@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Sistem Arsip Terpadu | Kantor Notaris & PPAT</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+  
+  <style>
+    html, body {
+      width: 100% !important;
+      max-width: 100vw !important;
+      overflow-x: hidden !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    *, div, table, form, input, select, textarea {
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }  
+    :root {
+      --primary: #1B3A6B;
+      --primary-dark: #122544;
+      --secondary: #C9A84C;
+      --bg-main: #F1F5F9;
+      --text-main: #1E293B;
+      --text-sub: #64748B;
+      --border: #CBD5E1;
+      --success: #10B981;
+      --danger: #EF4444;
+      --notaris-color: #1B3A6B;
+      --notaris-dark-color: #122544;
+      --ppat-color: #14532D;
+      --ppat-dark-color: #0F3D20;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-main); display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* Header sekarang terpusat di PartialHeader.html sehingga tampilannya
+       identik & permanen di semua modul (lihat include() di bagian body). */
+
+    .database-switcher { background-color: #fff; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid var(--border); }
+    .switcher-label { font-size: 11px; font-weight: 800; color: #475569; white-space: nowrap; letter-spacing: 0.3px; }
+    .switch-group { display: flex; gap: 8px; align-items: center; }
+    .switch-btn { padding: 8px 16px; font-size: 11px; font-weight: 800; border: 1.5px solid var(--border); border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; background-color: #fff; color: var(--text-sub); transition: all 0.2s; }
+    .switch-btn.active-notaris { background-color: var(--notaris-color); border-color: var(--notaris-color); color: white; }
+    .switch-btn.active-ppat { background-color: var(--ppat-color); border-color: var(--ppat-color); color: white; }
+
+    .app-container { display: flex; flex-direction: column; flex: 1; }
+
+    .tabbar { width: 100%; background: #fff; display: flex; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 70; }
+    .nav-item { flex: 1; padding: 13px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--text-sub); text-decoration: none; font-size: 11px; font-weight: 700; cursor: pointer; border-bottom: 3px solid transparent; }
+    .nav-item i { font-size: 15px; }
+    .nav-item.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(27,58,107,0.04); }
+
+    main { flex: 1; padding: 16px; overflow-y: auto; width: 100%; }
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: block !important; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+    .stat-card { background: white; border-radius: 16px; padding: 14px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 3px 10px rgba(15,23,42,0.06); border: 1px solid var(--border); border-bottom: 3px solid var(--border); }
+    .stat-card.total { border-bottom-color: var(--primary); }
+    .stat-card.bulan { border-bottom-color: var(--secondary); }
+    .stat-info h3 { font-size: 10px; color: var(--text-sub); text-transform: uppercase; }
+    .stat-info p { font-size: 20px; font-weight: 700; color: #0F172A; margin-top: 2px; }
+    .stat-icon { font-size: 22px; opacity: 0.2; }
+
+    .card-panel { background: white; border-radius: 18px; padding: 16px; box-shadow: 0 3px 12px rgba(15,23,42,0.06); border: 1px solid var(--border); margin-bottom: 16px; }
+    .panel-title { font-size: 13px; font-weight: 700; margin-bottom: 14px; color: var(--primary); border-bottom: 2px solid #F1F5F9; padding-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 12px; font-weight: 600; color: #334155; }
+    .form-group input, .form-group select, .form-group textarea { padding: 11px 12px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 14px; min-height: 44px; background-color: #FFF; }
+    .form-actions { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+
+    .search-wrapper { display: flex; gap: 8px; margin-bottom: 12px; }
+    .search-wrapper input { flex: 1; padding: 11px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; min-height: 44px; }
+
+    .btn { padding: 12px 16px; font-size: 13px; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; width: 100%; transition: transform .12s; } .btn:active{ transform: scale(0.98); }
+    .btn-primary { background-color: var(--primary); color: white; }
+    .btn-secondary { background-color: #E2E8F0; color: var(--text-main); }
+    .btn-danger { background-color: #FEE2E2; color: var(--danger); border: 1px solid #FCA5A5; }
+    
+    .filter-box { background-color: #F8FAFC; padding: 12px; border-radius: 8px; margin-bottom: 14px; display: grid; grid-template-columns: 1fr; gap: 10px; border: 1px dashed var(--border); }
+    
+    .table-responsive { overflow-x: auto; margin-top: 10px; border: 1px solid var(--border); border-radius: 14px; background: white; -webkit-overflow-scrolling: touch; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background-color: #F8FAFC; color: var(--primary); font-weight: 700; padding: 12px; border-bottom: 2px solid var(--border); text-align: left; white-space: nowrap; }
+    td { padding: 12px; border-bottom: 1px solid var(--border); white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+    
+    .action-badge-group { display: flex; gap: 6px; justify-content: center; }
+    .btn-action { padding: 8px 10px; border: 1px solid var(--border); background: white; border-radius: 6px; cursor: pointer; font-size: 14px; }
+
+    .highlight { background-color: #FEF08A; font-weight: 700; }
+    .pagination-container { display: flex; flex-direction: column; gap: 12px; align-items: center; margin-top: 15px; font-size: 12px; color: var(--text-sub); }
+    .pagination-buttons { display: flex; gap: 4px; }
+    .page-btn { padding: 8px 12px; border: 1px solid var(--border); background: white; cursor: pointer; border-radius: 6px; min-height: 38px; font-weight: 600; }
+    .page-btn:disabled { opacity: 0.4; }
+    .page-btn.active { background-color: var(--primary); color: white; border-color: var(--primary); }
+
+    .folder-header-box { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; border-radius: 10px; padding: 20px; margin-bottom: 16px; border-left: 5px solid var(--secondary); transition: background 0.3s ease; }
+    .folder-meta-badge { display: inline-block; background-color: var(--secondary); color: #0F172A; padding: 4px 10px; border-radius: 4px; font-weight: 700; font-size: 14px; margin-top: 8px; font-family: monospace; }
+    
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15,23,42,0.6); display: flex; justify-content: center; align-items: flex-end; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal-wrapper { background: white; border-top-left-radius: 16px; border-top-right-radius: 16px; width: 100%; max-height: 85vh; display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.2s ease; }
+    .modal-overlay.open .modal-wrapper { transform: translateY(0); }
+    .modal-header { padding: 14px 16px; background-color: var(--primary); color: white; display: flex; justify-content: space-between; align-items: center; }
+    .modal-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+    .modal-body { padding: 16px; overflow-y: auto; }
+    
+    .folder-banner-detail {
+      background-color: #F1F5F9;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--secondary);
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .detail-grid { display: flex; flex-direction: column; gap: 12px; }
+    .detail-item { border-bottom: 1px solid #CBD5E1; padding-bottom: 8px; }
+    .detail-label { font-size: 11px; color: var(--text-sub); font-weight: 700; text-transform: uppercase; }
+    .detail-val { font-size: 14px; font-weight: 600; margin-top: 4px; color: var(--text-main); word-break: break-word; }
+
+    .toast { position: fixed; top: 20px; left: 16px; right: 16px; padding: 14px 20px; color: white; border-radius: 8px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 10px; z-index: 2000; opacity: 0; transform: translateY(-20px); transition: all 0.2s; pointer-events: none; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { background-color: var(--success); }
+    .toast.danger { background-color: var(--danger); }
+    
+    .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; z-index: 3000; display: none; }
+    .spinner { width: 36px; height: 36px; border: 4px solid #E2E8F0; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 768px) {
+      .form-grid { grid-template-columns: 1fr; }
+      main { padding: 12px; }
+    }
+
+    @media (min-width: 769px) {
+      body { padding-bottom: 0; }
+      .form-actions { flex-direction: row; }
+      .filter-box { grid-template-columns: repeat(4, 1fr); }
+      .modal-overlay { align-items: center; }
+      .modal-wrapper { border-radius: 12px; max-width: 600px; transform: scale(0.9); }
+      .modal-overlay.open .modal-wrapper { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
+  <div class="toast" id="toastBox"></div>
+
+  <?!= include('PartialHeader', {judulHeader: judulHeader, baseUrl: baseUrl}); ?>
+
+  <div class="database-switcher">
+    <div class="switcher-label"><i class="fa-solid fa-database"></i> BUKU AKTIF:</div>
+    <div class="switch-group">
+      <button id="switchNotaris" class="switch-btn active-notaris" onclick="changeDatabase('NOTARIS')">
+        <i class="fa-solid fa-pen-nib"></i> NOTARIS
+      </button>
+      <button id="switchPPAT" class="switch-btn" onclick="changeDatabase('PPAT')">
+        <i class="fa-solid fa-map"></i> PPAT
+      </button>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <nav class="tabbar">
+      <div id="nav-dashboard" class="nav-item active" onclick="switchTab('dashboard', this)">
+        <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
+      </div>
+      <div id="nav-entri" class="nav-item" onclick="switchTab('entri', this)">
+        <i class="fa-solid fa-folder-plus"></i><span>Registrasi</span>
+      </div>
+      <div id="nav-cari" class="nav-item" onclick="switchTab('cari', this)">
+        <i class="fa-solid fa-magnifying-glass"></i><span>Pencarian <span id="cari-count"></span></span>
+      </div>
+    </nav>
+
+    <main>   
+      <div id="tab-dashboard" class="tab-content active">
+        <div class="stats-grid" style="grid-template-columns: 1fr;">
+          <div class="stat-card total">
+            <div class="stat-info">
+              <h3>Total Berkas [<span class="db-lbl">NOTARIS</span>]</h3>
+              <p id="stat-total">0</p>
+            </div>
+            <i class="fa-solid fa-box-archive stat-icon"></i>
+          </div>
+        </div>
+
+        <div id="papanDashboardFolder" style="margin-top:20px;">
+          <div class="folder-header-box">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; flex-wrap:wrap;">
+              <h2 style="font-size: 16px;"><i class="fa-solid fa-boxes-stacked"></i> DAFTAR FOLDER ARSIP</h2>
+              <button type="button" onclick="tambahCardFolder()" style="background:var(--secondary); color:#402F0F; border:none; padding:8px 14px; border-radius:8px; font-weight:800; font-size:12px; cursor:pointer; white-space:nowrap;">
+                <i class="fa-solid fa-plus"></i> Tambah Card Folder
+              </button>
+            </div>
+            <p style="font-size: 12px; opacity: 0.8; margin-top: 4px; margin-bottom: 12px;">Pilih folder dari kartu atau cari melalui menu dropdown di bawah ini:</p>
+            
+            <div style="background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2);">
+              <label for="selectCariFolderDashboard" style="font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px; color: #E2E8F0;">
+                <i class="fa-solid fa-magnifying-glass"></i> Cari & Buka Folder Langsung:
+              </label>
+              <select id="selectCariFolderDashboard" onchange="bukaFolderDariDropdown(this.value)" style="width: 100%; padding: 10px; border-radius: 6px; border: none; font-weight: bold; color: var(--primary); background: #FFF; font-size: 13px;">
+                <!-- Opsi diisi otomatis -->
+              </select>
+            </div>
+          </div>
+          
+          <div id="gridCardArsipFolder" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 15px;"></div>
+        </div>
+
+        <div id="halamanDetailIsiFolder" style="display: none; margin-top:20px;">
+          <div class="card-panel" style="margin-bottom: 12px;">
+            <button type="button" class="btn btn-secondary" style="width: auto; min-height: 38px; padding: 4px 12px; margin-bottom: 15px;" onclick="kembaliKeDashboardFolder()">
+              <i class="fa-solid fa-chevron-left"></i> Kembali ke Dashboard
+            </button>
+            <div>
+              <h2 id="judulNamaFolderTerpilih" style="font-size: 18px; color: var(--primary); font-weight: 700;">FOLDER DATA</h2>
+              <span id="labelKapasitasBaris" class="folder-meta-badge">Isi Slot: 0 / 50 Baris</span>
+            </div>
+          </div>
+
+          <!-- PENCARIAN NOMOR AKTA SAJA -->
+          <div class="search-wrapper">
+            <input type="text" id="kataKunciCariFolder" placeholder="Ketik Nomor Akta untuk mencari..." oninput="filterCariBerkasDalamFolder()">
+          </div>
+          <div id="wrapperListBerkasFolder" style="margin-top: 12px;"></div>
+        </div>
+      </div>
+
+      <div id="tab-entri" class="tab-content">
+        <div class="card-panel">
+          <div class="panel-title" id="form-panel-title"><i class="fa-solid fa-file-pen"></i> Form Registrasi Baru [<span class="db-lbl">NOTARIS</span>]</div>
+          <form id="formArsip" onsubmit="handleFormSubmit(event)">
+            <input type="hidden" id="editRowNumber" value="">
+            <input type="hidden" id="editOldNo" value="">
+            
+            <div class="form-grid">
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label><i class="fa-solid fa-clipboard-check"></i> Status Kelengkapan Berkas *</label>
+                <div style="display:flex; gap:10px;">
+                  <button type="button" id="btnKelengkapanLengkap" class="btn-kelengkapan" onclick="pilihKelengkapan('LENGKAP')" style="flex:1; padding:12px; border-radius:8px; border:2px solid #10B981; background:#fff; color:#10B981; font-weight:800; cursor:pointer; transition:all 0.15s;">
+                    <i class="fa-solid fa-circle-check"></i> LENGKAP
+                  </button>
+                  <button type="button" id="btnKelengkapanKurang" class="btn-kelengkapan" onclick="pilihKelengkapan('KURANG')" style="flex:1; padding:12px; border-radius:8px; border:2px solid #EF4444; background:#fff; color:#EF4444; font-weight:800; cursor:pointer; transition:all 0.15s;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> KURANG
+                  </button>
+                </div>
+                <input type="hidden" id="kelengkapan" value="">
+              </div>
+
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label><i class="fa-solid fa-folder-open"></i> Pilihan Folder *</label>
+                <div style="display:flex; gap:8px;">
+                  <select id="nomorFolder" required style="font-weight: bold; color: var(--primary); flex:1;"></select>
+                  <button type="button" onclick="tambahCardFolder()" title="Tambah Card Folder Baru" style="background:var(--secondary); color:#402F0F; border:none; padding:0 16px; border-radius:8px; font-weight:800; cursor:pointer;">
+                    <i class="fa-solid fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Tahun Akta *</label>
+                <input type="number" id="tahun" required>
+              </div>
+              <div class="form-group">
+                <label>Jenis Akta *</label>
+                <input type="text" id="jenisAkta" required>
+              </div>
+              <div class="form-group">
+                <label>Nomor Akta Resmi</label>
+                <input type="text" id="nomorAkta">
+              </div>
+              <div class="form-group">
+                <label>Tanggal Akta *</label>
+                <input type="date" id="tanggalAkta" required>
+              </div>
+              <div class="form-group">
+                <label>Proses Dari Bank / Umum *</label>
+                <select id="prosesBankUmum" required><option value="">-- Memuat Opsi... --</option></select>
+              </div>
+              <div class="form-group">
+                <label>Nama Pihak / Penghadap *</label>
+                <input type="text" id="namaPihak" required>
+              </div>
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label>Penanggung Jawab *</label>
+                <select id="penanggungJawab" required><option value="">-- Memuat Opsi... --</option></select>
+              </div>
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label>Keterangan</label>
+                <textarea id="keterangan" rows="2"></textarea>
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary" id="btnSimpan"><i class="fa-solid fa-floppy-disk"></i> Simpan Data</button>
+              <button type="button" class="btn btn-secondary" id="btnBatalEdit" style="display:none;" onclick="cancelEditState()">Batal Koreksi</button>
+              <button type="button" class="btn btn-danger" onclick="resetForm()"><i class="fa-solid fa-eraser"></i> Hapus / Kosongkan Kolom</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="tab-cari" class="tab-content">
+        <div class="card-panel">
+          <div class="panel-title" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <span><i class="fa-solid fa-filter"></i> Pencarian Riwayat Data</span>
+            <button type="button" onclick="cetakLaporanPDF()" style="background:#EF4444; color:#fff; border:none; padding:8px 14px; border-radius:8px; font-weight:800; font-size:12px; cursor:pointer;">
+              <i class="fa-solid fa-file-pdf"></i> Cetak Laporan PDF
+            </button>
+          </div>
+          <div class="search-wrapper">
+            <input type="text" id="searchGlobal" placeholder="Cari global nama pihak, nomor, boks folder..." oninput="executeSearch()">
+          </div>
+          
+          <div class="filter-box">
+            <div class="form-group"><select id="filterBank" onchange="executeSearch()"><option value="">-- Semua Bank/Umum --</option></select></div>
+            <div class="form-group"><select id="filterPJ" onchange="executeSearch()"><option value="">-- Semua PJ --</option></select></div>
+            <div class="form-group"><input type="number" id="filterTahun" placeholder="Filter Tahun" oninput="executeSearch()"></div>
+            <div class="form-group">
+              <select id="filterKelengkapan" onchange="executeSearch()">
+                <option value="">-- Semua Kelengkapan --</option>
+                <option value="LENGKAP">LENGKAP</option>
+                <option value="KURANG">KURANG</option>
+              </select>
+            </div>
+          </div>
+          
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; font-size:12px;">
+            <div id="totalTemuan" style="font-weight:600;">Ditemukan 0 data</div>
+            <span style="color:var(--text-sub); cursor:pointer;" onclick="resetFilters()"><i class="fa-solid fa-eraser"></i> Bersihkan</span>
+          </div>
+
+          <div class="table-responsive">
+            <table id="tableArsip">
+              <thead>
+                <tr>
+                  <th>NO</th><th>TAHUN</th><th>JENIS AKTA</th><th>NOMOR AKTA</th><th>TANGGAL AKTA</th><th>PROSES DARI BANK/UMUM</th><th>NAMA PIHAK/PENGHADAP</th><th>KETERANGAN</th><th>PENANGGUNG JAWAB</th><th>NOMOR FOLDER</th><th>KELENGKAPAN</th><th style="text-align: center;">AKSI</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+          
+          <div class="pagination-container">
+            <div id="paginationInfo">Menampilkan data</div>
+            <div class="pagination-buttons">
+              <button class="page-btn" id="btnPrev" onclick="changePage(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+              <div id="pageNumbers" style="display:inline-flex; gap:3px;"></div>
+              <button class="page-btn" id="btnNext" onclick="changePage(1)"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="modalDetail">
+    <div class="modal-wrapper">
+      <div class="modal-header">
+        <h3>DETAIL BERKAS</h3>
+        <button class="modal-close" onclick="closeModal('modalDetail')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="folder-banner-detail">
+          <i class="fa-solid fa-folder-open"></i> NOMOR FOLDER : <span id="detailFolderVal" style="text-decoration: underline;">-</span>
+        </div>
+
+        <div class="detail-grid" id="detailContent"></div>
+        <div style="margin-top:20px;">
+          <button class="btn btn-secondary" onclick="closeModal('modalDetail')">Tutup Jendela</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentDB = "NOTARIS";
+
+    // Mengembalikan warna tema aktif (navy untuk NOTARIS, hijau untuk PPAT),
+    // dipakai di tempat-tempat yang tidak bisa memakai variabel CSS langsung
+    // (mis. warna tombol pada SweetAlert2).
+    function warnaAktif() { return currentDB === "PPAT" ? "#14532D" : "#1B3A6B"; }
+
+    let dataMaster = [];
+    let dataFiltered = [];
+    let currentPage = 1;
+    const rowsPerPage = 15;
+    let namaFolderAktifTerpilih = "";
+    let maxFolderPerDB = { NOTARIS: 50, PPAT: 50 };
+    let selectedKelengkapan = "";
+
+    window.onload = function() { 
+      setupDateTime(); 
+      initDefaultFormValues(); 
+      inisialisasiDropdownFolder();
+      refreshAppData(); 
+    };
+
+    function showLoading(status) { document.getElementById('loadingOverlay').style.display = status ? 'flex' : 'none'; }
+    
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toastBox');
+      toast.className = `toast show ${type}`;
+      toast.innerHTML = `<i class="fa-solid ${type==='success'?'fa-circle-check':'fa-triangle-exclamation'}"></i> ${msg}`;
+      setTimeout(() => { toast.classList.remove('show'); }, 3500);
+    }
+
+    // Notifikasi sukses bergaya sama dengan modul Pembukuan Kantor (tulisan bold besar)
+    function tampilkanNotifikasiSuksesArsip(jenisAkta, nomorAkta, folder) {
+      const namaUser = sessionStorage.getItem('skn_nama_karyawan') || "ADMIN";
+      const warna = warnaAktif();
+      const templatePesan = `
+        <div style="font-size: 2.2rem; font-weight: 900; color: #16a34a; line-height: 1.1; text-align: center;">
+          SELAMAT ${namaUser}
+        </div>
+        <div style="font-size: 1.5rem; color: #334155; margin-top: 20px; text-align: center;">
+            Data Arsip Anda telah berhasil disimpan.<br><br>
+          <div style="background: #f8fafc; padding: 20px; border-radius: 15px; border: 2px solid #e2e8f0; border-top: 8px solid #16a34a; text-align: center; display: inline-block; min-width: 80%;">
+            <div style="display: flex; justify-content: center; align-items: baseline; gap: 8px; margin-bottom: 10px;">
+              <span style="color: ${warna}; font-size: 1.5rem; font-weight: bold;">AKTA</span>
+              <span style="font-size: 1.5rem; font-weight: 900; color: ${warna}; text-transform: uppercase;">${jenisAkta}</span>
+            </div>
+            <div style="color: ${warna}; font-weight: bold; line-height: 1.6;">
+              <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 5px;">
+                 <span style="color: ${warna};">NOMOR</span> ${nomorAkta}
+              </div>
+              <div>
+                 <span style="color: ${warna};">FOLDER</span> ${folder}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      Swal.fire({
+        html: templatePesan,
+        icon: 'success',
+        confirmButtonText: 'LANJUTKAN!',
+        confirmButtonColor: '#16a34a',
+        background: '#ffffff',
+        width: '600px',
+        backdrop: `rgba(0,0,0,0.6)`,
+        focusConfirm: false
+      });
+    }
+
+    function setupDateTime() {
+      const idDays = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+      const idMonths = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+      function tick() {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        const s = String(now.getSeconds()).padStart(2, '0');
+        document.getElementById('headerHari').innerText = `${idDays[now.getDay()]}, ${now.getDate()} ${idMonths[now.getMonth()]} ${now.getFullYear()}`;
+        document.getElementById('headerJam').innerText = `${h}:${m}:${s} WIB`;
+      }
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    function setupNamaHeader() {
+      var nama = sessionStorage.getItem('skn_nama_karyawan');
+      var el = document.getElementById('salamPengguna');
+      if (el) {
+        var span = el.querySelector('span');
+        if (span) span.innerText = 'Masuk sebagai: ' + (nama || '-');
+      }
+    }
+    setupNamaHeader();
+
+    function initDefaultFormValues() {
+      const hariIni = new Date();
+      document.getElementById('tanggalAkta').value = hariIni.toISOString().split('T')[0];
+      document.getElementById('tahun').value = hariIni.getFullYear();
+    }
+
+    function refreshAppData() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(res => {
+          if (!res) { showLoading(false); return; }
+          buildDropdownElements(res.options);
+          
+          document.getElementById('stat-total').innerText = res.stats ? res.stats.totalBerkas : 0;
+          var cariCountEl = document.getElementById('cari-count');
+          if (cariCountEl) cariCountEl.innerText = res.stats ? '(' + res.stats.totalBerkas + ')' : '';
+
+          if (res.maxFolder) {
+            maxFolderPerDB[currentDB] = res.maxFolder;
+            inisialisasiDropdownFolder();
+          }
+          
+          dataMaster = res.allArsip || [];
+          dataFiltered = [...dataMaster];
+          
+          executeSearch();
+          renderGridCardFolder(res.countsData);
+          showLoading(false);
+        })
+        .withFailureHandler(err => {
+          showLoading(false);
+          showToast("Gagal memuat data: " + err.message, 'danger');
+        })
+        .getInitialAppData(currentDB);
+    }
+
+    function buildDropdownElements(options) {
+      if(!options) return;
+      const selectBank = document.getElementById('prosesBankUmum');
+      const selectPJ = document.getElementById('penanggungJawab');
+      const filterBank = document.getElementById('filterBank');
+      const filterPJ = document.getElementById('filterPJ');
+
+      let bankHtml = '<option value="">-- Pilih Bank / Umum --</option>';
+      let fBankHtml = '<option value="">-- Semua Bank/Umum --</option>';
+      options.bankUmum.forEach(item => { bankHtml += `<option value="${item}">${item}</option>`; fBankHtml += `<option value="${item}">${item}</option>`; });
+
+      let pjHtml = '<option value="">-- Pilih PJ --</option>';
+      let fPjHtml = '<option value="">-- Semua PJ --</option>';
+      options.penanggungJawab.forEach(item => { pjHtml += `<option value="${item}">${item}</option>`; fPjHtml += `<option value="${item}">${item}</option>`; });
+
+      selectBank.innerHTML = bankHtml; filterBank.innerHTML = fBankHtml;
+      selectPJ.innerHTML = pjHtml; filterPJ.innerHTML = fPjHtml;
+    }
+
+    function inisialisasiDropdownFolder() {
+      const selectFolder = document.getElementById("nomorFolder");
+      const selectDashboard = document.getElementById("selectCariFolderDashboard");
+      
+      if (selectFolder) selectFolder.innerHTML = "";
+      if (selectDashboard) {
+        selectDashboard.innerHTML = '<option value="">-- Pilih / Cari Folder --</option>';
+      }
+
+      const prefix = currentDB === "NOTARIS" ? "FNOT" : "FPPAT";
+      const maxFolder = maxFolderPerDB[currentDB] || 50;
+      for (let i = 1; i <= maxFolder; i++) {
+        const pad = i < 10 ? "0" + i : i;
+        const folderName = `${prefix}-${pad}`;
+        
+        if (selectFolder) {
+          const opt1 = document.createElement("option");
+          opt1.value = folderName;
+          opt1.text = `[Folder] Folder Berkas [ ${folderName} ]`;
+          selectFolder.appendChild(opt1);
+        }
+
+        if (selectDashboard) {
+          const opt2 = document.createElement("option");
+          opt2.value = folderName;
+          opt2.text = `[Folder] ${folderName}`;
+          selectDashboard.appendChild(opt2);
+        }
+      }
+    }
+
+    // Menambah 1 card folder baru secara berurutan (mis. FNOT-51), tersinkron
+    // otomatis antara Dashboard dan dropdown "Pilihan Folder" di Registrasi.
+    function tambahCardFolder() {
+      Swal.fire({
+        title: 'Tambah Card Folder Baru?',
+        text: 'Folder baru akan dibuat otomatis mengikuti urutan penamaan yang sudah ada.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Tambahkan',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: warnaAktif()
+      }).then((r) => {
+        if (!r.isConfirmed) return;
+        showLoading(true);
+        google.script.run
+          .withSuccessHandler(res => {
+            showLoading(false);
+            if (res && res.success) {
+              maxFolderPerDB[currentDB] = res.maxFolder;
+              inisialisasiDropdownFolder();
+              renderGridCardFolder({});
+              refreshAppData();
+              showToast('Folder ' + res.folderName + ' berhasil ditambahkan.', 'success');
+            }
+          })
+          .withFailureHandler(err => { showLoading(false); showToast(err.message, 'danger'); })
+          .tambahFolderBaruArsip(currentDB);
+      });
+    }
+
+    // Toggle tombol status kelengkapan berkas (LENGKAP / KURANG)
+    function pilihKelengkapan(nilai) {
+      selectedKelengkapan = nilai;
+      document.getElementById('kelengkapan').value = nilai;
+      const btnLengkap = document.getElementById('btnKelengkapanLengkap');
+      const btnKurang = document.getElementById('btnKelengkapanKurang');
+      if (nilai === 'LENGKAP') {
+        btnLengkap.style.background = '#10B981'; btnLengkap.style.color = '#fff';
+        btnKurang.style.background = '#fff'; btnKurang.style.color = '#EF4444';
+      } else {
+        btnKurang.style.background = '#EF4444'; btnKurang.style.color = '#fff';
+        btnLengkap.style.background = '#fff'; btnLengkap.style.color = '#10B981';
+      }
+    }
+
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+      
+      const targetTab = document.getElementById(`tab-${tabId}`);
+      if (targetTab) targetTab.classList.add('active');
+      
+      if (el) { el.classList.add('active'); } 
+      else {
+        const navEl = document.getElementById(`nav-${tabId}`);
+        if (navEl) navEl.classList.add('active');
+      }
+      if(tabId === 'dashboard') { kembaliKeDashboardFolder(); }
+    }
+
+    function changeDatabase(targetDb) {
+      if (currentDB === targetDb) return;
+      if (document.getElementById('editRowNumber').value !== "") {
+        if (!confirm("Mode koreksi data aktif. Pindah pembukuan akan membatalkan perubahan?")) return;
+        cancelEditState();
+      }
+      currentDB = targetDb;
+      document.querySelectorAll('.db-lbl').forEach(el => el.innerText = targetDb);
+
+      if (targetDb === "NOTARIS") {
+        document.documentElement.style.setProperty('--primary', 'var(--notaris-color)');
+        document.documentElement.style.setProperty('--primary-dark', 'var(--notaris-dark-color)');
+        document.getElementById('switchNotaris').className = "switch-btn active-notaris";
+        document.getElementById('switchPPAT').className = "switch-btn";
+      } else {
+        document.documentElement.style.setProperty('--primary', 'var(--ppat-color)');
+        document.documentElement.style.setProperty('--primary-dark', 'var(--ppat-dark-color)');
+        document.getElementById('switchNotaris').className = "switch-btn";
+        document.getElementById('switchPPAT').className = "switch-btn active-ppat";
+      }
+      
+      switchTab('dashboard', document.getElementById('nav-dashboard'));
+      inisialisasiDropdownFolder();
+      refreshAppData();
+    }
+
+    function renderGridCardFolder(countsData) {
+      const container = document.getElementById("gridCardArsipFolder");
+      if (!container) return;
+      container.innerHTML = "";
+  
+      const prefix = currentDB === "PPAT" ? "FPPAT" : "FNOT";
+      const maxFolder = maxFolderPerDB[currentDB] || 50;
+  
+      for (let i = 1; i <= maxFolder; i++) {
+        const pad = i < 10 ? "0" + i : i;
+        const keyFolder = `${prefix}-${pad}`; 
+        const jumlahIsi = (countsData && countsData[keyFolder]) ? countsData[keyFolder] : 0;
+    
+        let borderStyle = `border-top: 4px solid ${currentDB === 'PPAT' ? 'var(--ppat-color)' : 'var(--notaris-color)'}; background-color: #FFF;`;
+        if (jumlahIsi >= 45) { borderStyle = "border-top: 4px solid var(--danger); background-color: #FEF2F2;"; }
+    
+        const cardHtml = `
+          <div class="card-folder-arsip" style="background: white; border-radius: 14px; padding: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); cursor: pointer; text-align: center; ${borderStyle}" onclick="bukaHalamanIsiFolder('${keyFolder}')">
+            <div style="font-size: 28px; color: ${jumlahIsi >= 45 ? 'var(--danger)':'#C9A84C'}; margin-bottom: 6px;">
+              <i class="fa-solid ${jumlahIsi > 0 ? 'fa-folder-open' : 'fa-folder'}"></i>
+            </div>
+            <div style="font-size: 12px; font-weight: 700; color: #1E293B;">${keyFolder}</div>
+            <div style="font-size: 11px; color: #64748B; margin-top: 4px;">${jumlahIsi} / 50 Berkas</div>
+          </div>
+        `;
+        container.innerHTML += cardHtml;
+      }
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const rowNum = document.getElementById('editRowNumber').value;
+
+      if (!selectedKelengkapan) {
+        Swal.fire('Perhatian', 'Silakan pilih status kelengkapan berkas (LENGKAP / KURANG) terlebih dahulu.', 'warning');
+        return;
+      }
+
+      const dataForm = {
+        oldNo: document.getElementById('editOldNo').value,
+        tahun: document.getElementById('tahun').value,
+        jenisAkta: document.getElementById('jenisAkta').value,
+        nomorAkta: document.getElementById('nomorAkta').value,
+        tanggalAkta: document.getElementById('tanggalAkta').value,
+        prosesBankUmum: document.getElementById('prosesBankUmum').value,
+        namaPihak: document.getElementById('namaPihak').value,
+        keterangan: document.getElementById('keterangan').value,
+        penanggungJawab: document.getElementById('penanggungJawab').value,
+        nomorFolder: document.getElementById('nomorFolder').value,
+        kelengkapan: selectedKelengkapan,
+        namaKaryawan: sessionStorage.getItem('skn_nama_karyawan') || ""
+      };
+
+      showLoading(true);
+      if (rowNum && rowNum !== "") {
+        google.script.run
+          .withSuccessHandler(response => { 
+            showLoading(false);
+            tampilkanNotifikasiSuksesArsip(dataForm.jenisAkta, dataForm.nomorAkta, dataForm.nomorFolder);
+            cancelEditState(); 
+            refreshAppData(); 
+            switchTab('cari', document.getElementById('nav-cari')); 
+          })
+          .withFailureHandler(err => { showLoading(false); showToast(err.message, 'danger'); })
+          .updateArsip(currentDB, rowNum, dataForm);
+      } else {
+        google.script.run
+          .withSuccessHandler(response => { 
+            showLoading(false);
+            tampilkanNotifikasiSuksesArsip(dataForm.jenisAkta, dataForm.nomorAkta, dataForm.nomorFolder);
+            refreshAppData(); 
+            // Data tidak dikosongkan otomatis berdasarkan perintah Anda
+          })
+          .withFailureHandler(err => { showLoading(false); showToast(err.message, 'danger'); })
+          .tambahArsip(currentDB, dataForm);
+      }
+    }
+
+    function activateEdit(itemJsonEscaped) {
+      const item = JSON.parse(decodeURIComponent(itemJsonEscaped));
+      document.getElementById('editRowNumber').value = item.rowNumber;
+      document.getElementById('editOldNo').value = item.no;
+      document.getElementById('nomorFolder').value = item.nomorFolder || "";
+      document.getElementById('tahun').value = item.tahun;
+      document.getElementById('jenisAkta').value = item.jenisAkta;
+      document.getElementById('nomorAkta').value = item.nomorAkta;
+      document.getElementById('tanggalAkta').value = item.tanggalAkta;
+      document.getElementById('prosesBankUmum').value = item.prosesBankUmum;
+      document.getElementById('penanggungJawab').value = item.penanggungJawab;
+      document.getElementById('namaPihak').value = item.namaPihak;
+      document.getElementById('keterangan').value = item.keterangan;
+      pilihKelengkapan(item.kelengkapan === 'KURANG' ? 'KURANG' : 'LENGKAP');
+
+      document.getElementById('form-panel-title').innerText = `Koreksi Data (Baris: ${item.rowNumber})`;
+      document.getElementById('btnSimpan').innerHTML = `<i class="fa-solid fa-check"></i> Perbarui Baris`;
+      document.getElementById('btnBatalEdit').style.display = 'inline-flex';
+      switchTab('entri', document.getElementById('nav-entri'));
+    }
+
+    function cancelEditState() {
+      document.getElementById('editRowNumber').value = ""; document.getElementById('editOldNo').value = "";
+      document.getElementById('form-panel-title').innerText = `Form Registrasi Baru [${currentDB}]`;
+      document.getElementById('btnSimpan').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Simpan Data`;
+      document.getElementById('btnBatalEdit').style.display = 'none'; 
+    }
+
+    function resetForm() {
+      document.getElementById('formArsip').reset();
+      initDefaultFormValues();
+      selectedKelengkapan = "";
+      document.getElementById('kelengkapan').value = "";
+      document.getElementById('btnKelengkapanLengkap').style.background = '#fff';
+      document.getElementById('btnKelengkapanLengkap').style.color = '#10B981';
+      document.getElementById('btnKelengkapanKurang').style.background = '#fff';
+      document.getElementById('btnKelengkapanKurang').style.color = '#EF4444';
+    }
+
+    function executeSearch() {
+      const keyword = document.getElementById('searchGlobal').value.toLowerCase().trim();
+      const fBank = document.getElementById('filterBank').value;
+      const fPJ = document.getElementById('filterPJ').value;
+      const fTahun = document.getElementById('filterTahun').value.trim();
+      const fKelengkapan = document.getElementById('filterKelengkapan').value;
+
+      dataFiltered = dataMaster.filter(item => {
+        if (keyword !== "") {
+          const matched = 
+            (item.no && item.no.toString().toLowerCase().includes(keyword)) ||
+            (item.jenisAkta && item.jenisAkta.toLowerCase().includes(keyword)) ||
+            (item.nomorAkta && item.nomorAkta.toLowerCase().includes(keyword)) ||
+            (item.namaPihak && item.namaPihak.toLowerCase().includes(keyword)) ||
+            (item.keterangan && item.keterangan.toLowerCase().includes(keyword)) ||
+            (item.nomorFolder && item.nomorFolder.toLowerCase().includes(keyword));
+          if (!matched) return false;
+        }
+        if (fBank !== "" && item.prosesBankUmum !== fBank) return false;
+        if (fPJ !== "" && item.penanggungJawab !== fPJ) return false;
+        if (fTahun !== "" && item.tahun.toString() !== fTahun) return false;
+        if (fKelengkapan !== "" && (item.kelengkapan || "").toUpperCase() !== fKelengkapan) return false;
+        return true;
+      });
+
+      currentPage = 1;
+      document.getElementById('totalTemuan').innerText = `Ditemukan ${dataFiltered.length} data`;
+      renderTable();
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('tableBody'); tbody.innerHTML = "";
+      if (dataFiltered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; color:var(--text-sub); padding:20px;">Data tidak ditemukan.</td></tr>`;
+        updatePaginationControls(); return;
+      }
+      const startIndex = (currentPage - 1) * rowsPerPage;
+      const endIndex = Math.min(startIndex + rowsPerPage, dataFiltered.length);
+      const searchKeyword = document.getElementById('searchGlobal').value.trim();
+
+      for (let i = startIndex; i < endIndex; i++) {
+        const item = dataFiltered[i]; const tr = document.createElement('tr'); const escapedJson = encodeURIComponent(JSON.stringify(item));
+        const kelengkapanBadge = item.kelengkapan === 'KURANG'
+          ? `<span style="font-weight:800; color:#EF4444;"><i class="fa-solid fa-triangle-exclamation"></i> KURANG</span>`
+          : item.kelengkapan === 'LENGKAP'
+            ? `<span style="font-weight:800; color:#10B981;"><i class="fa-solid fa-circle-check"></i> LENGKAP</span>`
+            : `<span style="color:var(--text-sub);">-</span>`;
+        tr.innerHTML = `
+          <td><b>${item.no}</b></td><td>${item.tahun}</td>
+          <td>${highlightText(item.jenisAkta, searchKeyword)}</td><td>${highlightText(item.nomorAkta || '-', searchKeyword)}</td>
+          <td>${formatIndoDate(item.tanggalAkta)}</td><td><span style="font-weight:600;">${item.prosesBankUmum}</span></td>
+          <td>${highlightText(item.namaPihak, searchKeyword)}</td>
+          <td>${highlightText(item.keterangan || '-', searchKeyword)}</td>
+          <td>${item.penanggungJawab || '-'}</td>
+          <td><span style="font-weight:700; color:var(--primary); background:#E2E8F0; padding:4px 8px; border-radius:4px; cursor:pointer;" onclick="switchTab('dashboard', null); bukaHalamanIsiFolder('${item.nomorFolder}')"><i class="fa-solid fa-folder-tree"></i> ${item.nomorFolder || '-'}</span></td>
+          <td>${kelengkapanBadge}</td>
+          <td style="text-align:center;">
+            <div class="action-badge-group">
+              <button class="btn-action" style="color:var(--secondary)" onclick="activateEdit('${escapedJson}')"><i class="fa-solid fa-pen"></i></button>
+              <button class="btn-action" style="color:var(--danger)" onclick="deleteData('${item.rowNumber}', '${item.no}')"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+      updatePaginationControls();
+    }
+
+    function openDetail(itemJsonEscaped) {
+      const item = JSON.parse(decodeURIComponent(itemJsonEscaped));
+      
+      document.getElementById('detailFolderVal').innerText = item.nomorFolder || '-';
+
+      const container = document.getElementById('detailContent');
+      container.innerHTML = `
+        <div class="detail-item"><div class="detail-label">NOMOR URUT BERKAS (NO)</div><div class="detail-val">${item.no || '-'}</div></div>
+        <div class="detail-item"><div class="detail-label">TAHUN AKTA</div><div class="detail-val">${item.tahun || '-'}</div></div>
+        <div class="detail-item"><div class="detail-label">JENIS AKTA</div><div class="detail-val">${item.jenisAkta || '-'}</div></div>
+        <div class="detail-item"><div class="detail-label">NOMOR AKTA RESMI</div><div class="detail-val">${item.nomorAkta || '-'}</div></div>
+        <div class="detail-item"><div class="detail-label">TANGGAL AKTA</div><div class="detail-val">${formatIndoDate(item.tanggalAkta)}</div></div>
+        <div class="detail-item"><div class="detail-label">PROSES DARI BANK/UMUM</div><div class="detail-val">${item.prosesBankUmum || '-'}</div></div>
+        <div class="detail-item"><div class="detail-label">NAMA PIHAK / PENGHADAP</div><div class="detail-val">${item.namaPihak || '-'}</div></div>
+        <div class="detail-item"><div class="detail-label">PENANGGUNG JAWAB</div><div class="detail-val">${item.penanggungJawab || '-'}</div></div>
+        <div class="detail-item"><div class="detail-label">KETERANGAN</div><div class="detail-val">${item.keterangan || '-'}</div></div>
+        <div class="detail-item"><div class="detail-label">WAKTU ENTRI DATA</div><div class="detail-val">${item.waktuEntri || '-'}</div></div>
+      `;
+      document.getElementById('modalDetail').classList.add('open');
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    function deleteData(rowNumber, no) {
+      if (!confirm(`Apakah Anda yakin ingin menghapus permanen data nomor ${no}?`)) return;
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(res => { showToast(res.message, 'success'); refreshAppData(); })
+        .withFailureHandler(err => { showLoading(false); showToast(err.message, 'danger'); })
+        .hapusArsip(currentDB, rowNumber, no);
+    }
+
+    function highlightText(text, keyword) {
+      if (!keyword || !text) return text || '';
+      const re = new RegExp(`(${keyword})`, 'gi');
+      return text.toString().replace(re, '<mark class="highlight">$1</mark>');
+    }
+
+    function formatIndoDate(dateStr) {
+      if (!dateStr) return '-';
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return dateStr;
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    function updatePaginationControls() {
+      const totalPages = Math.ceil(dataFiltered.length / rowsPerPage) || 1;
+      document.getElementById('paginationInfo').innerText = `Halaman ${currentPage} dari ${totalPages} (${dataFiltered.length} total data)`;
+      document.getElementById('btnPrev').disabled = (currentPage === 1);
+      document.getElementById('btnNext').disabled = (currentPage === totalPages);
+
+      const pageContainer = document.getElementById('pageNumbers'); pageContainer.innerHTML = '';
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+          const btn = document.createElement('button');
+          btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+          btn.innerText = i; btn.onclick = () => { currentPage = i; renderTable(); };
+          pageContainer.appendChild(btn);
+        }
+      }
+    }
+
+    function changePage(direction) {
+      currentPage += direction;
+      renderTable();
+    }
+
+    function resetFilters() {
+      document.getElementById('searchGlobal').value = '';
+      document.getElementById('filterBank').value = '';
+      document.getElementById('filterPJ').value = '';
+      document.getElementById('filterTahun').value = '';
+      document.getElementById('filterKelengkapan').value = '';
+      executeSearch();
+    }
+
+    // Cetak Laporan PDF - wajib ada minimal satu filter aktif, hanya mencetak
+    // data yang sedang ditampilkan (dataFiltered) sesuai filter yang dipasang.
+    // Menghasilkan file PDF siap cetak (bukan file Excel).
+    function cetakLaporanPDF() {
+      const keyword = document.getElementById('searchGlobal').value.trim();
+      const fBank = document.getElementById('filterBank').value;
+      const fPJ = document.getElementById('filterPJ').value;
+      const fTahun = document.getElementById('filterTahun').value.trim();
+      const fKelengkapan = document.getElementById('filterKelengkapan').value;
+
+      const adaFilterAktif = keyword !== "" || fBank !== "" || fPJ !== "" || fTahun !== "" || fKelengkapan !== "";
+      if (!adaFilterAktif) {
+        Swal.fire('Pasang Filter Dahulu', 'Silakan pilih/pasang minimal satu filter pencarian sebelum mencetak laporan PDF.', 'warning');
+        return;
+      }
+      if (dataFiltered.length === 0) {
+        Swal.fire('Data Kosong', 'Tidak ada data pada hasil filter saat ini untuk dicetak.', 'info');
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const namaUser = sessionStorage.getItem('skn_nama_karyawan') || "ADMIN";
+      const tanggalCetak = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+
+      // Header laporan
+      doc.setFontSize(13);
+      doc.setFont(undefined, 'bold');
+      doc.text('LAPORAN ARSIP KANTOR NOTARIS/PPAT', 14, 14);
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'italic');
+      doc.text('Sylvi Yeriza S.H., M.Kn', 14, 20);
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(9);
+      doc.text(`Buku Aktif: ${currentDB}`, 14, 27);
+
+      // Ringkasan filter yang dipasang
+      const daftarFilter = [];
+      if (keyword) daftarFilter.push(`Kata kunci: "${keyword}"`);
+      if (fBank) daftarFilter.push(`Proses: ${fBank}`);
+      if (fPJ) daftarFilter.push(`PJ: ${fPJ}`);
+      if (fTahun) daftarFilter.push(`Tahun: ${fTahun}`);
+      if (fKelengkapan) daftarFilter.push(`Kelengkapan: ${fKelengkapan}`);
+      doc.text(`Filter: ${daftarFilter.join(' | ')}`, 14, 32);
+      doc.text(`Dicetak oleh: ${namaUser}  |  Tanggal cetak: ${tanggalCetak}  |  Total data: ${dataFiltered.length}`, 14, 37);
+
+      const kolom = ["NO","TAHUN","JENIS AKTA","NOMOR AKTA","TANGGAL AKTA","PROSES DARI BANK/UMUM","NAMA PIHAK/PENGHADAP","KETERANGAN","PENANGGUNG JAWAB","NOMOR FOLDER","KELENGKAPAN"];
+      const baris = dataFiltered.map(item => [
+        item.no, item.tahun, item.jenisAkta, item.nomorAkta || '-',
+        formatIndoDate(item.tanggalAkta), item.prosesBankUmum, item.namaPihak,
+        item.keterangan || '-', item.penanggungJawab || '-', item.nomorFolder || '-',
+        item.kelengkapan || '-'
+      ]);
+
+      doc.autoTable({
+        head: [kolom],
+        body: baris,
+        startY: 42,
+        theme: 'grid',
+        styles: { fontSize: 7.5, cellPadding: 1.8, valign: 'middle' },
+        headStyles: { fillColor: [27, 58, 107], textColor: 255, fontStyle: 'bold', halign: 'center' },
+        alternateRowStyles: { fillColor: [245, 248, 251] },
+        columnStyles: { 0: { halign: 'center', cellWidth: 8 } },
+        didDrawPage: function (data) {
+          const pageCount = doc.internal.getNumberOfPages();
+          doc.setFontSize(8);
+          doc.text(
+            `Halaman ${doc.internal.getCurrentPageInfo().pageNumber} dari ${pageCount}`,
+            doc.internal.pageSize.getWidth() - 40,
+            doc.internal.pageSize.getHeight() - 8
+          );
+        }
+      });
+
+      const namaFile = `Laporan_Arsip_${currentDB}_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(namaFile);
+    }
+
+    // MEMBUKA HALAMAN ISI FOLDER DARI DROPDOWN DASHBOARD
+    function bukaFolderDariDropdown(val) {
+      if (!val || val === "") return;
+      bukaHalamanIsiFolder(val);
+    }
+
+    function bukaHalamanIsiFolder(namaFolder) {
+      namaFolderAktifTerpilih = namaFolder;
+      document.getElementById('papanDashboardFolder').style.display = 'none';
+      document.getElementById('halamanDetailIsiFolder').style.display = 'block';
+      document.getElementById('judulNamaFolderTerpilih').innerText = `ISI FOLDER: ${namaFolder}`;
+      document.getElementById('kataKunciCariFolder').value = '';
+      filterCariBerkasDalamFolder();
+    }
+
+    function kembaliKeDashboardFolder() {
+      document.getElementById('papanDashboardFolder').style.display = 'block';
+      document.getElementById('halamanDetailIsiFolder').style.display = 'none';
+      document.getElementById('kataKunciCariFolder').value = '';
+      document.getElementById('selectCariFolderDashboard').value = '';
+    }
+
+    // FUNGSI PENCARIAN DALAM FOLDER (KHUSUS NOMOR AKTA)
+    function filterCariBerkasDalamFolder() {
+      const keyword = document.getElementById('kataKunciCariFolder').value.toLowerCase().trim();
+      
+      const itemsInFolder = dataMaster.filter(item => {
+        // Pastikan berkas berasal dari folder yang sedang dibuka
+        const matchFolder = item.nomorFolder && item.nomorFolder.toString().trim() === namaFolderAktifTerpilih;
+        if (!matchFolder) return false;
+
+        // Filter KHUSUS Nomor Akta
+        if (keyword !== "") {
+          const nomorAktaVal = item.nomorAkta ? item.nomorAkta.toString().toLowerCase() : "";
+          return nomorAktaVal.includes(keyword);
+        }
+        return true;
+      });
+
+      document.getElementById('labelKapasitasBaris').innerText = `Isi Slot: ${itemsInFolder.length} / 50 Baris`;
+
+      const wrapper = document.getElementById('wrapperListBerkasFolder');
+      if (itemsInFolder.length === 0) {
+        wrapper.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-sub); background:white; border-radius:8px;">Nomor Akta tidak ditemukan dalam folder ini.</div>`;
+        return;
+      }
+
+      let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
+      itemsInFolder.forEach(item => {
+        const escapedJson = encodeURIComponent(JSON.stringify(item));
+        html += `
+          <div style="background:white; border:1px solid var(--border); border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:700; color:var(--primary); font-size:14px;">No. ${item.no} - ${item.jenisAkta}</div>
+              <div style="font-size:12px; color:var(--text-main); margin-top:2px;"><b>Pihak:</b> ${item.namaPihak} | <b>No Akta:</b> <span style="background:#FEF08A; font-weight:700; padding:0 4px; border-radius:3px;">${item.nomorAkta || '-'}</span></div>
+              <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">Tanggal: ${formatIndoDate(item.tanggalAkta)} | PJ: ${item.penanggungJawab}</div>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button class="btn-action" style="color:var(--primary)" onclick="openDetail('${escapedJson}')"><i class="fa-solid fa-eye"></i></button>
+              <button class="btn-action" style="color:var(--secondary)" onclick="activateEdit('${escapedJson}')"><i class="fa-solid fa-pen"></i></button>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      wrapper.innerHTML = html;
+    }
+  </script>
+</body>
+</html>
