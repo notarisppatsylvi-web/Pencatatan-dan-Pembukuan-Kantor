@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<!-- VERSI FILE: v20260901-01 (gunakan Ctrl+F cari kode ini untuk verifikasi sinkronisasi) -->
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    // Selaraskan palet warna Tailwind dengan tema utama Navy & Gold
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
+          },
+          colors: {
+            yellow: {
+              50:  '#FBF7EC', 100: '#F6EED3', 200: '#EDDFA9', 300: '#E1CB7E',
+              400: '#C9A84C', 500: '#BC9938', 600: '#A9832E', 700: '#8A6A25',
+              800: '#6E541D', 900: '#584316'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    // Script untuk terus memantau dan mengganti icon setiap 1 detik
+    setInterval(function() {
+      var icon = document.querySelector("link[rel*='icon']");
+      var url = "https://www.gstatic.com/images/icons/material/system/2x/book_black_24dp.png";
+      if (icon) {
+        if (icon.href !== url) icon.href = url;
+      } else {
+        var link = document.createElement('link');
+        link.rel = 'shortcut icon';
+        link.href = url;
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
+    }, 1000);
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.12.1/polyfill.min.js"></script>
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow-x: hidden; }
+    /* Header sekarang terpusat di PartialHeader.html sehingga tampilannya
+       identik & permanen di semua modul (lihat include() di bagian body). */
+
+    .tabbar-pembukuan {
+      display: flex; background: #fff; border-bottom: 1px solid #E2E8F0; position: sticky; top: 0; z-index: 70;
+      align-items: center; padding-right: 8px;
+    }
+    .tab-item-pembukuan {
+      flex: 1; padding: 13px 6px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; color: #64748B; font-size: 11px; font-weight: 700; cursor: pointer; border-bottom: 3px solid transparent;
+      text-transform: uppercase;
+    }
+    .tab-item-pembukuan i { font-size: 15px; }
+    .tab-item-pembukuan.active { color: #1B3A6B; border-bottom-color: #1B3A6B; background: rgba(27,58,107,0.04); }
+    .edit-data-btn {
+      width: 34px; height: 34px; border-radius: 10px; border: 1.5px solid #E2E8F0; background: #fff;
+      color: #64748B; display: flex; align-items: center; justify-content: center; cursor: pointer; flex: 0 0 auto;
+    }
+    .edit-data-btn:active { transform: scale(0.92); }
+
+    .book-picker-wrap { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 12px 0 4px; flex: 1 1 auto; min-width: 0; }
+    .entry-toolbar { display: flex; align-items: center; gap: 10px; padding: 0 12px; }
+    .book-picker { display: flex; gap: 8px; padding: 0 2px 6px; width: max-content; }
+    .book-chip {
+      flex: 0 0 auto; padding: 9px 16px; font-size: 11px; font-weight: 800; text-transform: uppercase;
+      border-radius: 999px; border: 1.5px solid #CBD5E1; background: #fff; color: #475569; cursor: pointer; white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .book-chip.active { background: #1B3A6B; border-color: #1B3A6B; color: #fff; }
+
+    .dash-intro-banner {
+      background: linear-gradient(180deg, #1B3A6B 0%, #122544 100%); border-radius: 20px; padding: 16px 18px;
+      margin-bottom: 18px;
+    }
+    .dib-title { color: #C9A84C; font-size: 13px; font-weight: 900; letter-spacing: 0.4px; }
+    .dib-sub { color: rgba(255,255,255,0.85); font-size: 11px; margin-top: 4px; line-height: 1.5; }
+    .dash-book-list-title { font-size: 11px; font-weight: 900; color: #1E293B; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 10px; }
+    .dash-book-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 24px; }
+    @media (min-width: 640px) { .dash-book-grid { grid-template-columns: repeat(4, 1fr); } }
+    .book-tile-card {
+      position: relative; background: #fff; border: 2px solid #E2E8F0; border-radius: 18px;
+      padding: 12px 10px 14px; cursor: pointer; transition: box-shadow .15s, transform .15s, border-color .15s; text-align: center;
+    }
+    .book-tile-card:active { transform: scale(0.97); }
+    .book-tile-card:hover { box-shadow: 0 6px 16px rgba(15,23,42,0.1); border-color: #C9A84C; }
+    .btc-year { font-size: 8.5px; font-weight: 900; color: #64748B; text-transform: uppercase; letter-spacing: 0.3px; }
+    .btc-title { font-size: 10.5px; font-weight: 900; color: #1E293B; text-transform: uppercase; margin-top: 3px; line-height: 1.25; min-height: 26px; display: flex; align-items: center; justify-content: center; }
+    .btc-total { font-size: 26px; font-weight: 900; color: #DC2626; margin-top: 4px; }
+    .btc-add-btn {
+      position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 8px;
+      background: #1B3A6B; color: #C9A84C; border: none; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 900; cursor: pointer; line-height: 1;
+    }
+    .btc-add-btn:active { transform: scale(0.9); }
+
+    .date-display { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: flex; align-items: center; padding-left: 1rem; font-weight: 900; color: #1e293b; background: white; border-radius: 0.75rem; border: 2px solid #e2e8f0; z-index: 5; }
+    
+    #tanggalInput { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 10; }
+    
+    .flatpickr-calendar { border: 4px solid #1B3A6B !important; border-radius: 15px !important; box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important; }
+    .flatpickr-day.selected { background: #1B3A6B !important; border-color: #1B3A6B !important; }
+
+    #loading-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; justify-content:center; align-items:center; color:white; }
+
+    @media (max-width: 768px) { 
+      main { margin-left: 0 !important; }
+    }
+
+    .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+  /* 1. Header: Selalu Rata Tengah & Vertikal Center */
+  #dashHistoryHead th, 
+  #entryHistoryHead th {
+    text-align: center !important;
+    vertical-align: middle !important;
+    padding: 12px 8px !important;
+    border-right: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* 2. Isi: Rata Kiri & Aktifkan LOGIKA UNDERSACING */
+  #dashHistoryBody td, 
+  #entryHistoryBody td {
+    text-align: left !important; /* Isi rata kiri */
+    vertical-align: top !important; /* Agar teks rapi dari atas jika multi-baris */
+    padding: 10px 8px !important;
+    border-right: 1px solid #e2e8f0;
+    
+    /* INI KUNCI AGAR NAMA TURUN KE BAWAH (PENGHADAP) */
+    white-space: pre-line !important; 
+    line-height: 1.5 !important;
+  }
+
+  /* 3. Khusus Kolom Nomor: Tetap di Tengah */
+  #dashHistoryBody td:first-child,
+  #entryHistoryBody td:first-child {
+    text-align: center !important;
+    font-weight: 900;
+  }
+  </style>
+</head>
+<body class="bg-[#F1F5F9] font-sans flex flex-col min-h-screen">
+
+  <!-- Catatan: Halaman isi identitas/nama sekarang berada di Menu Utama (sebelum masuk sistem),
+       bukan di modul ini lagi. Nama yang sudah diisi otomatis terbawa ke sini lewat sessionStorage. -->
+
+  <div id="loading-overlay" class="flex flex-col gap-4 text-center">
+      <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-yellow-400 mx-auto"></div>
+      <span class="tracking-widest font-black uppercase text-xl text-yellow-400">Memproses...</span>
+  </div>
+
+  <div id="customAlert" class="hidden fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-white rounded-[40px] shadow-2xl border-b-[12px] border-green-600 max-w-sm w-full p-8 text-center">
+      <h3 class="text-green-600 font-black uppercase tracking-widest text-sm mb-3">Selesai!</h3>
+      <p id="alertMessage" class="text-slate-900 font-black text-xl leading-tight mb-8 uppercase italic"></p>
+      <button onclick="closeAlert()" class="w-full bg-green-600 text-white font-black py-4 rounded-2xl shadow-xl uppercase">OKE, LANJUTKAN</button>
+    </div>
+  </div>
+
+  <?!= include('PartialHeader', {judulHeader: judulHeader, baseUrl: baseUrl}); ?>
+
+  <div class="tabbar-pembukuan">
+    <div id="nav-dashboard" onclick="showView('DASHBOARD', this)" class="tab-item-pembukuan active">
+      <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
+    </div>
+    <div id="nav-registrasi" onclick="showView('ENTRY_TAB', this)" class="tab-item-pembukuan">
+      <i class="fa-solid fa-folder-plus"></i><span>Registrasi</span>
+    </div>
+  </div>
+
+  <div class="flex flex-1 relative">
+    <main id="main-content" class="flex-1 p-3 md:p-6 w-full">
+      <div id="view-DASHBOARD" class="view-section">
+        <div class="max-w-7xl mx-auto">
+
+          <div class="flex-1 bg-white rounded-[30px] shadow-xl p-5 border-4 border-slate-300 w-full">
+            <div class="flex justify-between items-center mb-4">
+              <h2 class="text-xl font-black uppercase text-slate-800 italic flex items-center gap-2">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                DASHBOARD
+              </h2>
+              <select id="filterTahun" onchange="refreshDashboardStats()" class="bg-slate-800 border-2 border-white p-1 rounded text-yellow-500 font-black outline-none h-10"></select>
+            </div>
+
+            <div class="dash-intro-banner">
+              <div>
+                <div class="dib-title">DASHBOARD PEMBUKUAN KANTOR</div>
+                <div class="dib-sub">Pilih card buku di bawah untuk melihat seluruh riwayat entri data.</div>
+              </div>
+            </div>
+
+            <div class="dash-book-list-title">Daftar Buku Kantor (8 Buku)</div>
+            <div id="dashboard-grid" class="dash-book-grid"></div>
+      
+            <div id="dashboard-history-area" class="hidden border-t-4 border-slate-100 pt-6 mt-8">
+             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+    
+                <div class="flex flex-wrap items-center gap-3">
+                  <h3 id="dash-history-title" class="font-black text-red-700 uppercase italic text-lg">RIWAYAT DATA</h3>
+      
+                  <button id="btnCetakPDF" onclick="printReport()" class="bg-red-600 text-white px-5 py-2 rounded-xl font-black text-xs uppercase shadow-lg active:scale-95 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    CETAK
+                  </button>
+
+                  <select id="filterBulanCetak" class="bg-white border-2 border-slate-300 p-2 rounded-xl font-black text-xs outline-none h-10 shadow-sm focus:border-blue-500 cursor-pointer">
+                    <option value="ALL">SEMUA BULAN</option>
+                    <option value="0">JANUARI</option>
+                    <option value="1">FEBRUARI</option>
+                    <option value="2">MARET</option>
+                    <option value="3">APRIL</option>
+                    <option value="4">MEI</option>
+                    <option value="5">JUNI</option>
+                    <option value="6">JULI</option>
+                    <option value="7">AGUSTUS</option>
+                    <option value="8">SEPTEMBER</option>
+                    <option value="9">OKTOBER</option>
+                    <option value="10">NOVEMBER</option>
+                    <option value="11">DESEMBER</option>
+                  </select>
+                </div>
+
+                <div class="w-full md:w-auto">
+                  <input type="text" id="dashSearchInput" onkeyup="filterDashHistory()" placeholder="Cari data di tabel..." 
+                        class="w-full md:w-80 p-3 border-2 border-slate-300 rounded-2xl font-bold focus:ring-2 focus:ring-blue-400 outline-none shadow-inner">
+                </div>
+              </div>
+              <div class="flex justify-center mb-4">
+                <div id="displayNamaBuku" class="bg-slate-800 text-yellow-500 px-10 py-2 rounded-t-2xl font-black text-xl uppercase tracking-widest border-b-4 border-red-600 shadow-lg">
+                  NAMA BUKU
+                </div>
+              </div>
+              <div class="overflow-x-auto rounded-2xl border-2 border-slate-300 bg-slate-50">
+                <table class="w-full min-w-[800px] border-collapse">
+                  <thead id="dashHistoryHead" class="bg-slate-800 text-white text-[10px] font-black uppercase">
+                    </thead>
+                  <tbody id="dashHistoryBody" class="text-xs font-bold text-slate-700">
+                    </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="view-ENTRY" class="view-section hidden">
+        <div class="entry-toolbar">
+          <div class="book-picker-wrap">
+            <div class="book-picker" id="bookPicker">
+              <button type="button" class="book-chip active" data-book="NOTARIS" onclick="pilihBukuRegistrasi('NOTARIS', this)">Buku Notaris</button>
+              <button type="button" class="book-chip" data-book="PPAT" onclick="pilihBukuRegistrasi('PPAT', this)">Buku PPAT</button>
+              <button type="button" class="book-chip" data-book="LEGALISASI" onclick="pilihBukuRegistrasi('LEGALISASI', this)">Buku Legalisasi</button>
+              <button type="button" class="book-chip" data-book="WAARMERKING" onclick="pilihBukuRegistrasi('WAARMERKING', this)">Buku Waarmerking</button>
+              <button type="button" class="book-chip" data-book="COVERNOTE" onclick="pilihBukuRegistrasi('COVERNOTE', this)">Buku Covernote</button>
+              <button type="button" class="book-chip" data-book="KWITANSI" onclick="pilihBukuRegistrasi('KWITANSI', this)">Buku Kwitansi</button>
+              <button type="button" class="book-chip" data-book="BPN" onclick="pilihBukuRegistrasi('BPN', this)">Buku Berkas BPN</button>
+              <button type="button" class="book-chip" data-book="SURAT_KELUAR" onclick="pilihBukuRegistrasi('SURAT_KELUAR', this)">Buku Surat Keluar</button>
+            </div>
+          </div>
+        </div>
+        <section class="bg-white rounded-[30px] shadow-xl border-t-[10px] border-red-700 p-4 max-w-5xl mx-auto border-4 border-slate-300">
+          <div id="editModeBanner" class="hidden mb-4 bg-blue-600 text-white rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg border-4 border-blue-800 animate-fade-in">
+            <div class="flex items-center gap-2 text-center sm:text-left">
+              <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+              <span class="font-black uppercase text-xs sm:text-sm tracking-wide">Mode Edit Aktif - Perbarui data pada form di bawah lalu simpan</span>
+            </div>
+            <button type="button" onclick="batalEdit()" class="bg-white text-blue-700 font-black text-xs uppercase px-4 py-2 rounded-xl shadow active:scale-95 transition-all whitespace-nowrap">Batal Edit</button>
+          </div>
+          <div class="flex justify-between items-center mb-6 border-b-2 pb-4">
+            <h2 id="judul-buku" class="text-xl md:text-3xl font-black uppercase text-slate-800 italic">--</h2>
+            <div class="bg-yellow-400 px-6 py-2 rounded-2xl font-black text-4xl border-8 border-black"><span id="auto-no">--</span></div>
+          </div>
+          <form id="formInput" onsubmit="handleFormSubmit(event)" class="grid grid-cols-1 gap-4">
+            <input type="hidden" id="currentType">
+            <div id="fieldContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start"></div>
+            <button type="submit" id="btnSubmitForm" class="w-full bg-green-700 text-white font-black py-5 rounded-xl uppercase text-2xl active:scale-95 transition-all shadow-lg shadow-green-200">SIMPAN DATA</button>
+            <button type="button" id="btnBatalEdit" onclick="batalEdit()" class="hidden w-full bg-slate-400 text-white font-black py-4 rounded-xl uppercase text-sm active:scale-95 transition-all">BATAL EDIT</button>
+          </form>
+      <div id="entry-history-area" class="hidden mt-10 max-w-5xl mx-auto mb-10">
+        <div class="bg-slate-800 text-white p-4 rounded-t-3xl flex items-center gap-3">
+          <div class="bg-red-600 p-2 rounded-lg">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </div>
+          <h3 class="font-black italic uppercase text-sm">Riwayat 10 Data Terakhir</h3>
+        </div>
+        <div class="bg-white border-4 border-slate-800 rounded-b-3xl shadow-2xl overflow-hidden">
+          <div class="overflow-x-auto">
+            <table id="tabel-riwayat-utama" class="w-full border-collapse">
+              <thead id="entryHistoryHead" class="bg-slate-100 border-b-4 border-slate-800 text-[10px] font-black uppercase text-slate-700">
+                </thead>
+              <tbody id="entryHistoryBody" class="text-[11px] font-bold text-slate-600">
+                </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+        </section>
+      </div>      
+        
+    </main>
+  </div>
+
+  <script>
+    // Nama karyawan aktif sekarang diisi SEKALI di Menu Utama (sebelum masuk sistem),
+    // lalu dibaca di sini lewat sessionStorage supaya fitur "siapa yang menginput data"
+    // tetap berjalan seperti sebelumnya tanpa perlu isi ulang di modul ini.
+    var BASE_URL = "<?= baseUrl ?>";
+    var namaKaryawanAktif = (sessionStorage.getItem('skn_nama_karyawan') || "").toUpperCase();
+
+    if (!namaKaryawanAktif) {
+      // Belum mengisi identitas di Menu Utama -> arahkan kembali supaya data tetap tercatat benar
+      window.top.location.href = BASE_URL + '?page=menu';
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      var elSalam = document.getElementById('salamPengguna');
+      if (elSalam && namaKaryawanAktif) {
+        var span = elSalam.querySelector('span');
+        if (span) span.innerText = "Masuk sebagai: " + namaKaryawanAktif;
+      }
+    });
+
+    let currentActiveBook = "";
+    const idDays = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+    const idMonths = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    let dashRawHistory = [];
+
+    // --- STATUS MODE EDIT (dipakai agar tombol EDIT membuka Form Entri, bukan popup kecil) ---
+    let editMode = false;
+    let editBukuKey = "";
+    let editSubArsip = "";
+    let editRowIndex = null;
+    let editDataLama = null;
+
+    window.onload = () => {
+      const select = document.getElementById('filterTahun');
+      for(let i=2026; i<=2040; i++) {
+        let opt = document.createElement('option');
+        opt.value = i; opt.innerHTML = i; select.appendChild(opt);
+      }
+      refreshDashboardStats();
+    };
+
+    let currentEntryBook = "NOTARIS"; // Buku terakhir yang dibuka di tab Registrasi
+
+    function showView(viewName, element) {
+      document.querySelectorAll('.tab-item-pembukuan').forEach(el => el.classList.remove('active'));
+      if (element) element.classList.add('active');
+      document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('hidden'));
+
+      if (viewName === 'DASHBOARD') {
+        document.getElementById('view-DASHBOARD').classList.remove('hidden');
+        refreshDashboardStats();
+      } else if (viewName === 'ENTRY_TAB') {
+        document.getElementById('view-ENTRY').classList.remove('hidden');
+        changeBuku(currentEntryBook);
+      } else {
+        // Dipanggil langsung dengan nama buku (mis. dari pilihBukuRegistrasi)
+        document.getElementById('nav-registrasi').classList.add('active');
+        document.getElementById('view-ENTRY').classList.remove('hidden');
+        currentEntryBook = viewName;
+        changeBuku(viewName);
+      }
+    }
+
+    function pilihBukuRegistrasi(bookKey, btnEl) {
+      currentEntryBook = bookKey;
+      document.querySelectorAll('.book-chip').forEach(el => el.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+      changeBuku(bookKey);
+    }
+
+    // MODIFIKASI FUNGSI CHANGE BUKU ANDA
+    function changeBuku(type) {
+      document.getElementById('currentType').value = type;
+      document.getElementById('judul-buku').innerText = "INPUT " + type.replace('_', ' ');
+  
+      // 1. Render Form
+      renderFields(type); 
+  
+      // 2. Ambil Nomor Terakhir
+      refreshNumber(type); 
+  
+      // 3. AMBIL RIWAYAT (TAMBAHKAN INI!)
+      loadHistoryToEntry(type); 
+    }
+
+    // FUNGSI BARU UNTUK MENGAMBIL DATA KE TABEL BAWAH FORM
+    function loadHistoryToEntry(bukuKey) {
+      const area = document.getElementById('entry-history-area');
+      const body = document.getElementById('entryHistoryBody');
+      const head = document.getElementById('entryHistoryHead');
+      const tahun = new Date().getFullYear();
+
+      area.classList.remove('hidden');
+      body.innerHTML = `<tr><td colspan="10" class="p-10 text-center animate-pulse font-black text-slate-400">MENGAMBIL DATA RIWAYAT...</td></tr>`;
+
+      google.script.run.withSuccessHandler(res => {
+        // 1. Render Header
+        if (res.headers && res.headers.length > 0) {
+          head.innerHTML = `<tr>${res.headers.map(h => `<th class="p-3 border-r border-slate-300 uppercase">${h}</th>`).join('')}<th class="p-3 text-center bg-slate-100">AKSI</th></tr>`;
+        }
+
+        // 2. Render Isi - Menyesuaikan struktur object seperti Dashboard
+        if (!res.isi || res.isi.length === 0) {
+          body.innerHTML = `<tr><td colspan="${(res.headers.length + 1) || 10}" class="p-10 text-center font-black text-red-500">BELUM ADA DATA</td></tr>`;
+          return;
+        }
+
+        let rowsHtml = "";
+        const jumlahHeaderAsli = res.headers.length;
+    
+        // Mengambil 10 data terakhir dari array object res.isi
+        const limitedData = res.isi.slice(0, 10); 
+    
+        const subArsipVal = (bukuKey === 'ARSIP') ? (document.querySelector('input[name="subArsip"]:checked')?.value || '') : '';
+
+        limitedData.forEach((obj) => {
+          // SAMA SEPERTI DASHBOARD: Mengambil isiBaris dan nomorBarisAsli
+          const rowData = obj.isiBaris; 
+          const rowNumAsli = obj.nomorBarisAsli; 
+
+          if (!rowData) return; // Skip jika data kosong
+
+          // Ambil data murni sesuai jumlah header
+          const dataMurni = rowData.slice(0, jumlahHeaderAsli);
+          const dataString = JSON.stringify(dataMurni).replace(/"/g, '&quot;');
+
+          rowsHtml += `<tr class="border-b hover:bg-blue-100 transition-colors">`;
+  
+          // Loop kolom sesuai jumlah header asli
+          for (let i = 0; i < jumlahHeaderAsli; i++) {
+            let cellData = dataMurni[i] || "";
+        
+            if (bukuKey === 'KWITANSI' && i === 5) {
+              rowsHtml += `<td class="p-3 border-r border-slate-200 font-black text-slate-900 bg-white text-right">${cellData}</td>`;
+            } else {
+              rowsHtml += `<td class="p-3 border-r border-slate-200">${cellData}</td>`;
+            }
+          }
+  
+          // Tombol Edit dengan parameter yang sama dengan Dashboard
+          rowsHtml += `
+            <td class="p-3">
+              <div class="flex items-center justify-center w-full h-full">
+                <button onclick="pemicuEdit('${bukuKey}', '${subArsipVal}', ${rowNumAsli}, ${dataString})" 
+                        class="bg-yellow-500 hover:bg-blue-700 text-slate-900 px-5 py-2 rounded-xl font-black text-[10px] shadow-md transition-all uppercase active:scale-95">EDIT
+                </button>
+              </div>
+            </td>
+          </tr>`;
+        });
+
+        body.innerHTML = rowsHtml;
+      }).getHistoryData(bukuKey, 'NOTARIS', tahun);
+    }
+
+    function checkJenisLainnya(val) {
+      const container = document.getElementById('containerJenisLainnya');
+      if (val === 'LAINNYA') {
+        container.classList.remove('hidden');
+        container.classList.add('animate-fade-in');
+        document.getElementById('inputJenisLainnya').setAttribute('required', 'true');
+      } else {
+        container.classList.add('hidden');
+        document.getElementById('inputJenisLainnya').removeAttribute('required');
+      }
+    }
+
+    function renderFields(type) {
+      const c = document.getElementById('fieldContainer');
+      
+      let html = `
+        <div class="md:col-span-2">
+            <label class="block text-[10px] font-black uppercase mb-1 text-slate-500 tracking-widest">[Tanggal] Tanggal Entri</label>
+            <div class="date-wrapper relative w-full h-[58px] border-4 border-slate-200 rounded-xl overflow-hidden bg-white">
+              <div class="absolute inset-0 flex items-center px-4 font-black text-lg text-slate-900 z-0" id="date-text">
+                Pilih Tanggal...
+              </div>
+              <input type="date" name="tanggal" id="tanggalInput" 
+                     class="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10" 
+                     onchange="updateDateDisplay(this.value)" required>
+            </div>
+          </div>`;
+      
+      if(type === 'SURAT_KELUAR') {
+        html += `<div class="md:col-span-2">
+                  <label class="block text-[10px] font-black uppercase mb-1 text-slate-500">Perihal Surat</label>
+                  <textarea name="perihal" placeholder="Isi Perihal Surat..." required class="w-full border-4 p-4 rounded-xl font-black text-lg outline-none focus:border-red-600 shadow-inner h-32"></textarea>
+                </div>`;
+      } else if(type === 'ARSIP') {
+        html += `<div class="md:col-span-2 flex gap-4 mb-2 bg-yellow-500 p-4 rounded-2xl border-2"><label class="flex-1 text-center font-black text-lg"><input type="radio" name="subArsip" value="NOTARIS" checked onchange="changeBuku('ARSIP')"> NOTARIS</label><label class="flex-1 text-center font-black text-lg"><input type="radio" name="subArsip" value="PPAT" onchange="changeBuku('ARSIP')"> PPAT</label></div>
+        <input type="text" name="noAkta" placeholder="No. Akta" required class="border-4 p-4 rounded-xl font-black text-lg outline-none focus:border-red-600 shadow-inner">
+        <div class="flex flex-col gap-2">
+          <select name="jenisAkta" id="jenisAktaSelect" onchange="checkJenisLainnya(this.value)" class="border-4 p-4 rounded-xl font-black text-lg bg-white outline-none focus:border-red-600 shadow-inner h-[66px]"></select>
+          <div id="containerJenisLainnya" class="hidden"><input type="text" id="inputJenisLainnya" placeholder="Sebutkan Jenis Akta Lainnya..." class="w-full border-4 p-4 rounded-xl font-black text-lg outline-none border-blue-500 bg-blue-50 shadow-inner h-[66px]"></div>
+        </div>`;
+      } else {
+        if(type === 'BPN') { 
+          html += `<input type="text" name="proses" placeholder="Proses BPN" required class="border-4 p-4 rounded-xl font-black text-lg outline-none focus:border-red-600 shadow-inner h-[66px]">`; 
+        } else { 
+          html += `
+          <div class="flex flex-col gap-2">
+            <select name="jenisAkta" id="jenisAktaSelect" onchange="checkJenisLainnya(this.value)" class="border-4 p-4 rounded-xl font-black text-lg bg-white outline-none focus:border-red-600 shadow-inner h-[66px]"></select>
+            <div id="containerJenisLainnya" class="hidden"><input type="text" id="inputJenisLainnya" placeholder="Sebutkan Jenis Akta Lainnya..." class="w-full border-4 p-4 rounded-xl font-black text-lg outline-none border-blue-500 bg-blue-50 shadow-inner h-[66px]"></div>
+          </div>`; 
+        }
+        if(['NOTARIS','PPAT','COVERNOTE','KWITANSI'].includes(type)) {
+          html += `<select name="bank" id="bSelect" class="border-4 p-4 rounded-xl font-black text-lg bg-white outline-none focus:border-red-600 shadow-inner h-[66px]"></select>`;
+        }
+        // --- TAMBAHKAN KODE INI DI SINI ---
+        if(type === 'KWITANSI') {
+          html += `
+          <div class="md:col-span-2 mt-2">
+            <label class="block text-[10px] font-black uppercase mb-1 text-slate-500">[Rp] Nilai Kwitansi</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-4 font-black text-lg text-slate-400">Rp</span>
+              <input type="text" name="nilaiKwitansi" id="nilaiKwitansi" 
+                placeholder="0" 
+                oninput="formatRupiah(this)"
+                class="w-full border-4 pl-12 p-4 rounded-xl font-black text-lg outline-none focus:border-red-600 shadow-inner h-[66px]">
+            </div>
+          </div>`;
+        }
+      }
+
+      // Input Nama hanya jika bukan Surat Keluar
+      if(type !== 'SURAT_KELUAR') {
+        const fN = (type === 'BPN') ? 'pemilik' : 'penghadap';
+        const lN = (type === 'BPN') ? 'Nama Pemilik' : 'Nama Penghadap';
+        html += `<div class="md:col-span-2 mt-4">
+                  <label class="block text-[10px] font-black uppercase mb-1 text-slate-500">${lN}</label>
+                  <div id="p-box" class="space-y-2">
+                    <div class="flex items-center gap-3 row-nama">
+                      <span class="nomor-label font-black text-xl text-slate-800 w-8">1.</span>
+                      <input type="text" class="input-nama flex-1 border-4 p-4 rounded-xl font-black text-lg outline-none focus:border-red-600 shadow-inner" placeholder="Isi Nama..." required>
+                    </div>
+                  </div>
+                  <button type="button" onclick="addInp()" class="mt-4 bg-blue-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase shadow-lg hover:bg-blue-700 active:scale-95 transition-all">+ Tambah Nama</button>
+                </div>`;
+      }
+
+      if(type === 'ARSIP') {
+         html += `<div class="md:col-span-2 grid grid-cols-4 gap-2 text-[8px] font-black uppercase text-center bg-slate-100 p-4 rounded-2xl border-2 border-dashed border-green-600 mt-4"><label class="border-2 p-2 rounded-xl bg-white"><input type="checkbox" name="ktp" class="block mx-auto mb-1"> KTP</label><label class="border-2 p-2 rounded-xl bg-white"><input type="checkbox" name="kk" class="block mx-auto mb-1"> KK</label><label class="border-2 p-2 rounded-xl bg-white"><input type="checkbox" name="agunan" class="block mx-auto mb-1"> AGN</label><label class="border-2 p-2 rounded-xl bg-white"><input type="checkbox" name="sidikJari" class="block mx-auto mb-1"> SDK</label></div>`;
+      }
+
+      c.innerHTML = html;
+
+      flatpickr("#tanggalInput", {
+        locale: "id",
+        dateFormat: "Y-m-d",
+        disableMobile: "true",
+        onChange: function(selectedDates, dateStr) {
+          updateDateDisplay(dateStr);
+        }
+      });
+
+      if(document.getElementById('jenisAktaSelect')) { 
+        google.script.run.withSuccessHandler(opts => { 
+          let optHtml = `<option value="" disabled selected>Pilih Jenis Akta...</option>`;
+          optHtml += opts.map(o => `<option value="${o}">${o}</option>`).join('');
+          optHtml += `<option value="LAINNYA" class="font-black text-blue-600">+ LAINNYA</option>`;
+          document.getElementById('jenisAktaSelect').innerHTML = optHtml;
+        }).getJenisAktaOptions(); 
+      }
+      if(document.getElementById('bSelect')) { 
+        google.script.run.withSuccessHandler(opts => { 
+          document.getElementById('bSelect').innerHTML = `<option value="" disabled selected>Pilih Bank...</option>` + opts.map(o => `<option value="${o}">${o}</option>`).join(''); 
+        }).getBankOptions(type); 
+      }
+    }
+
+    function addInp() {
+      const container = document.getElementById('p-box');
+      const nextNum = container.getElementsByClassName('row-nama').length + 1;
+      const div = document.createElement('div');
+      div.className = "flex items-center gap-3 row-nama";
+      div.innerHTML = `<span class="nomor-label font-black text-xl text-slate-800 w-8">${nextNum}.</span><input type="text" class="input-nama flex-1 border-4 p-4 rounded-xl font-black text-lg outline-none focus:border-red-600 shadow-inner" placeholder="Isi Nama..." required><button type="button" onclick="removeInp(this)" class="bg-red-600 text-white p-4 rounded-xl shadow-md"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>`;
+      container.appendChild(div);
+    }
+
+    function removeInp(btn) {
+      btn.parentElement.remove();
+      const rows = document.getElementById('p-box').getElementsByClassName('row-nama');
+      for (let i = 0; i < rows.length; i++) { rows[i].querySelector('.nomor-label').innerText = (i + 1) + "."; }
+    }
+
+    function updateDateDisplay(val) {
+      const display = document.getElementById('date-text');
+      if(!val) { display.innerText = "Pilih Tanggal..."; return; }
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return;
+      display.innerText = idDays[d.getDay()] + ", " + d.getDate() + " " + idMonths[d.getMonth()] + " " + d.getFullYear();
+      refreshNumber(document.getElementById('currentType').value);
+    }
+
+    function refreshNumber(t) {
+      if (editMode) return; // Jangan timpa nomor otomatis saat sedang mengedit data lama
+      let s = 'NOTARIS';
+      if (t === 'ARSIP') { const r = document.getElementsByName('subArsip'); for (let i=0; i<r.length; i++) { if (r[i].checked) s = r[i].value; } }
+      const tglInput = document.getElementById('tanggalInput') ? document.getElementById('tanggalInput').value : null;
+      google.script.run.withSuccessHandler(n => { document.getElementById('auto-no').innerText = n; }).getNextNumberOnly(t, s, tglInput);
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      document.getElementById('loading-overlay').style.display = 'flex';
+      const t = document.getElementById('currentType').value;
+      const fd = new FormData(e.target);
+      const data = {}; 
+
+      // --- LOGIKA PENTING: Sisipkan nama karyawan ke data yang akan dikirim ---
+      data['namaKaryawan'] = namaKaryawanAktif; 
+
+      // (Kode listNamaFinal dan looping tetap sama seperti milik Anda)
+      if(t !== 'SURAT_KELUAR') {
+        const listNamaFinal = [];
+        const fN = (t === 'BPN') ? 'pemilik' : 'penghadap';
+        const rows = document.getElementsByClassName('row-nama');
+        for (let i=0; i<rows.length; i++) {
+          const no = rows[i].querySelector('.nomor-label').innerText;
+          const nama = rows[i].querySelector('.input-nama').value;
+          if (t === 'KWITANSI' || t === 'COVERNOTE') {
+            listNamaFinal.push(nama); 
+          } else {
+            listNamaFinal.push(no + " " + nama); 
+          }
+        }
+        data[fN] = listNamaFinal;
+      }
+      
+      fd.forEach((v, k) => { data[k] = v; });
+
+      if(data['jenisAkta'] === 'LAINNYA') {
+        data['jenisAkta'] = document.getElementById('inputJenisLainnya').value.toUpperCase();
+      }
+
+      // --- JIKA SEDANG MODE EDIT, ALIHKAN KE PROSES UPDATE, BUKAN TAMBAH DATA BARU ---
+      if (editMode) {
+        submitEditData(t, data);
+        return;
+      }
+
+      const tglTeks = document.getElementById('date-text').innerText;
+      
+      // --- BARU: Ambil Nama Buku dari variabel 't' ---
+      const namaBukuAktif = t.replace('_', ' ').toUpperCase(); 
+
+      google.script.run.withSuccessHandler(res => {
+        // 1. Matikan loading
+        document.getElementById('loading-overlay').style.display = 'none';
+        
+        // 2. AMBIL DATA UNTUK NOTIFIKASI
+        const nomorBuku = res.nomor;
+        const tanggalSelesai = tglTeks.toUpperCase();
+
+        // 3. PANGGIL NOTIFIKASI DENGAN TAMBAHAN NAMA BUKU (namaBukuAktif)
+        tampilkanNotifikasiSukses(nomorBuku, tanggalSelesai, namaBukuAktif);
+        
+        // --- PROSES PEMBERSIHAN FORM ---
+        e.target.reset(); 
+
+        if(document.getElementById('tanggalInput')) {
+          document.getElementById('tanggalInput').value = "";
+        }
+
+        if(document.getElementById('date-text')) {
+          document.getElementById('date-text').innerText = "Pilih Tanggal...";
+        }
+
+        const container = document.getElementById('p-box');
+        if (container) {
+          container.innerHTML = `
+            <div class="flex items-center gap-3 row-nama">
+              <span class="nomor-label font-black text-xl text-slate-800 w-8">1.</span>
+              <input type="text" class="input-nama flex-1 border-4 p-4 rounded-xl font-black text-lg outline-none focus:border-red-600 shadow-inner" placeholder="Isi Nama..." required>
+            </div>`;
+        }
+
+        refreshNumber(t);
+        loadHistoryToEntry(t); 
+        
+      }).submitData(t, data);   
+    }
+    function clearForm() {
+      // 1. Reset Form (Input teks, radio, dll)
+      // 'myForm' adalah asumsi ID form Anda, jika tidak ada ID, gunakan document.querySelector('form')
+      const form = document.querySelector('form');
+      if(form) form.reset();
+
+      // 2. Bersihkan Container Nama (p-box)
+      const container = document.getElementById('p-box');
+      if (container) {
+        // Sisakan hanya 1 baris input nama kosong
+        container.innerHTML = `
+          <div class="flex items-center gap-3 row-nama">
+            <span class="nomor-label font-black text-xl text-slate-800 w-8">1.</span>
+            <input type="text" class="input-nama flex-1 border-4 p-4 rounded-xl font-black text-lg outline-none focus:border-red-600 shadow-inner" placeholder="Isi Nama..." required>
+          </div>`;
+      }
+
+      // 3. Reset Teks Tanggal
+      const display = document.getElementById('date-text');
+      if(display) display.innerText = "Pilih Tanggal...";
+
+      console.log("Form Berhasil Diclear!");
+    }
+
+    function closeAlert() { document.getElementById('customAlert').classList.add('hidden'); }
+
+    // Peta ikon & warna per jenis buku (khusus untuk tampilan daftar buku di Dashboard)
+    const BOOK_STYLE_MAP = {
+      "NOTARIS":      { label: "Buku Notaris" },
+      "PPAT":         { label: "Buku PPAT" },
+      "LEGALISASI":   { label: "Buku Legalisasi" },
+      "WAARMERKING":  { label: "Buku Waarmerking" },
+      "COVERNOTE":    { label: "Buku Covernote" },
+      "KWITANSI":     { label: "Buku Kwitansi" },
+      "BPN":          { label: "Buku Berkas BPN" },
+      "SURAT_KELUAR": { label: "Buku Surat Keluar" }
+    };
+
+    function refreshDashboardStats() {
+      const t = document.getElementById('filterTahun').value;
+      const g = document.getElementById('dashboard-grid');
+      g.innerHTML = `<p class="col-span-full text-center py-10 text-slate-400 uppercase text-sm animate-pulse">Memuat...</p>`;
+      google.script.run.withSuccessHandler(jsonStr => {
+        const data = JSON.parse(jsonStr);
+        let itemsHtml = "";
+        data.forEach(item => {
+          const style = BOOK_STYLE_MAP[item.key] || { label: item.namaBuku };
+          itemsHtml += `
+            <div onclick="loadHistoryToDashboard('${item.key}')" class="book-tile-card">
+              <button type="button" class="btc-add-btn" title="Registrasi ${style.label}" onclick="event.stopPropagation(); bukaRegistrasiDariCard('${item.key}');">+</button>
+              <div class="btc-year">Tahun ${t}</div>
+              <div class="btc-title">${style.label}</div>
+              <div class="btc-total">${item.total}</div>
+            </div>`;
+        });
+        g.innerHTML = itemsHtml;
+      }).getDashboardStats(t);
+    }
+
+    // Tombol [+] pada card Dashboard: langsung buka halaman Registrasi untuk buku terkait
+    function bukaRegistrasiDariCard(bookKey) {
+      document.querySelectorAll('.tab-item-pembukuan').forEach(el => el.classList.remove('active'));
+      document.getElementById('nav-registrasi').classList.add('active');
+      document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('hidden'));
+      document.getElementById('view-ENTRY').classList.remove('hidden');
+      currentEntryBook = bookKey;
+      document.querySelectorAll('.book-chip').forEach(el => el.classList.toggle('active', el.getAttribute('data-book') === bookKey));
+      changeBuku(bookKey);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Tambahkan parameter default 'isAfterEdit = false'
+    function loadHistoryToDashboard(bukuKey, isAfterEdit = false) {
+      currentActiveBook = bukuKey; 
+      const area = document.getElementById('dashboard-history-area');
+      const btnCetak = document.getElementById('btnCetakPDF');
+      const tahunPilihan = document.getElementById('filterTahun').value;
+
+      const namaCantik = bukuKey.replace('_', ' ').toUpperCase();
+      const displayElement = document.getElementById('displayNamaBuku');
+      if(displayElement) {
+        displayElement.innerText = "BUKU " + namaCantik;
+      }
+
+      area.classList.remove('hidden');
+      btnCetak.classList.remove('hidden'); 
+  
+      document.getElementById('loading-overlay').style.display = 'flex';
+  
+      google.script.run.withSuccessHandler(res => {
+        document.getElementById('loading-overlay').style.display = 'none';
+        dashRawHistory = res.isi;
+
+        // 1. RENDER HEADER ASLI DARI SPREADSHEET + AKSI
+        const headersLengkap = [...res.headers, "AKSI"];
+        document.getElementById('dashHistoryHead').innerHTML = `
+          <tr class="bg-slate-800 text-white">
+            ${headersLengkap.map(h => `<th class="p-3 border-r border-slate-600 uppercase text-[10px]">${h}</th>`).join('')}
+          </tr>`;
+    
+        // 2. PANGGIL RENDER TABLE DENGAN JUMLAH HEADER YANG BENAR
+        renderDashTable(res.isi, res.headers.length);
+
+        // --- PENYESUAIAN POIN 2: TAMPILKAN NOTIFIKASI SETELAH LOADING SELESAI ---
+        if (isAfterEdit === true) {
+          Swal.fire({
+            icon: 'success',
+            title: 'PERUBAHAN DISIMPAN!',
+            text: 'Data berhasil diperbarui ke Spreadsheet.',
+            confirmButtonColor: '#16a34a',
+            confirmButtonText: 'LANJUTKAN!',
+            timer: 20000 
+          });
+        }
+        
+        area.scrollIntoView({ behavior: 'smooth' });
+      }).getHistoryData(bukuKey, null, tahunPilihan);
+    }
+
+    function printReport() {
+      const tahun = document.getElementById('filterTahun').value;
+      const bulan = document.getElementById('filterBulanCetak').value; // Pastikan ID ini ada di HTML Anda
+  
+      if (!currentActiveBook) {
+        alert("PILIH BUKU TERLEBIH DAHULU!");
+        return;
+      }
+
+      document.getElementById('loading-overlay').style.display = 'flex';
+
+      google.script.run.withSuccessHandler(res => {
+        document.getElementById('loading-overlay').style.display = 'none';
+        if(res.status === "success") {
+          window.open(res.url, '_blank');
+          // Opsional: Tampilkan kembali semua baris setelah jeda cetak
+          setTimeout(() => { 
+            google.script.run.showAllRows(currentActiveBook, tahun); 
+          }, 5000);
+        } else {
+          alert("GAGAL: " + res.message);
+        }
+      }).generatePDF(currentActiveBook, tahun, bulan);
+    }
+
+    function renderDashTable(data, jumlahHeaderAsli) {
+      const body = document.getElementById('dashHistoryBody');
+      let html = "";
+
+      if (!data || data.length === 0) {
+        body.innerHTML = `<tr><td colspan="${jumlahHeaderAsli + 1}" class="p-10 text-center font-black text-slate-400">TIDAK ADA DATA</td></tr>`;
+        return;
+      }
+
+      data.forEach((obj) => {
+        const rowData = obj.isiBaris; // Data array kolom
+        const rowNumAsli = obj.nomorBarisAsli; // ID Baris asli di Sheet
+    
+        const dataMurni = rowData.slice(0, jumlahHeaderAsli);
+        const dataString = JSON.stringify(dataMurni).replace(/"/g, '&quot;');
+
+        html += `<tr class="border-b hover:bg-slate-50">`;
+    
+        for (let i = 0; i < jumlahHeaderAsli; i++) {
+          let cellData = dataMurni[i] || "";
+          if (currentActiveBook === 'KWITANSI' && i === 5) {
+            html += `<td class="p-3 border-r border-slate-200 font-black text-slate-900 bg-slate-50 text-right">${cellData}</td>`;
+          } else {
+            html += `<td class="p-3 border-r border-slate-200 text-[11px]">${cellData}</td>`;
+          }
+        }
+
+        // Tombol Edit dengan rowNumAsli yang akurat
+        html += `
+          <td class="p-2 bg-slate-100 border-l-2 border-slate-300 align-middle text-center">
+              <button onclick="pemicuEdit('${currentActiveBook}', '', ${rowNumAsli}, ${dataString})" 
+                      class="bg-yellow-500 hover:bg-yellow-600 text-slate-900 px-4 py-2 rounded-xl font-black text-[10px] uppercase shadow-md active:scale-95 transition-all">EDIT
+              </button>
+          </td>
+        </tr>`;
+      });
+
+      body.innerHTML = html;
+    }
+
+    function filterDashHistory() {
+      // 1. Ambil kata kunci dari input
+      const val = document.getElementById('dashSearchInput').value.toLowerCase();
+  
+      // 2. Hitung jumlah kolom judul (Header)
+      const dashHead = document.getElementById('dashHistoryHead');
+      const allHeaders = dashHead.querySelectorAll('th');
+      const jumlahHeaderData = allHeaders.length - 1; // Mengurangi kolom AKSI
+
+      // 3. Lakukan pemfilteran data
+      // dashRawHistory harus berisi data "res.isi" yang baru saja diambil dari server
+      const filtered = dashRawHistory.filter(obj => {
+        // KOREKSI: Karena data sekarang berupa Object, kita harus mengakses .isiBaris
+        const rowData = obj.isiBaris; 
+    
+        // Kita cari kata kunci di dalam array isiBaris
+        return rowData.some((cell, idx) => {
+          // Hanya mencari di kolom yang masuk dalam range Header (menghindari kolom koordinat tersembunyi)
+          if (idx < jumlahHeaderData) {
+            return cell && cell.toString().toLowerCase().includes(val);
+          }
+          return false;
+        });
+      });
+  
+      // 4. Gambar ulang tabel
+      renderDashTable(filtered, jumlahHeaderData);
+    }
+
+    function updateRealtimeClock() {
+      try {
+        const now = new Date();
+        const idDays = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+        const idMonths = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        const s = String(now.getSeconds()).padStart(2, '0');
+  
+        const txtHari = `${idDays[now.getDay()]}, ${now.getDate()} ${idMonths[now.getMonth()]} ${now.getFullYear()}`;
+        const txtJam = `${h}:${m}:${s} WIB`;
+  
+        // Update elemen Hari (jika ada)
+        const elDay = document.getElementById('headerHari');
+        if(elDay) elDay.innerText = txtHari;
+        
+        // Update elemen Jam (jika ada)
+        const elClock = document.getElementById('headerJam');
+        if(elClock) elClock.innerText = txtJam;
+
+        // Jika Anda juga menampilkan waktu di Form Entry
+        const elDisplay = document.getElementById('displayWaktu');
+        if(elDisplay) elDisplay.innerText = txtHari + " | " + txtJam;
+
+      } catch (e) {
+        console.log("Clock error:", e);
+      }
+    }
+
+    // Pastikan interval dipasang sekali saja
+    if (!window.clockInterval) {
+      window.clockInterval = setInterval(updateRealtimeClock, 1000);
+    }
+    // TAMBAHKAN DI BAGIAN PALING BAWAH SCRIPT ANDA
+
+    // Catatan: fungsi isi-nama (validasiLangsung/tutupOpening) sudah dipindahkan
+    // ke Menu Utama dan tidak lagi dipakai di modul ini.
+
+    function tampilkanNotifikasiSukses(nomorBuku, tanggal, jenisBuku) {
+      const loading = document.getElementById('loading-overlay');
+      if(loading) loading.style.display = 'none';
+
+      // Mengambil dari variabel global yang diisi saat opening
+      const namaUser = namaKaryawanAktif || "ADMIN";
+
+      const templatePesan = `
+        <div style="font-size: 2.2rem; font-weight: 900; color: #16a34a; line-height: 1.1; text-align: center;">
+          SELAMAT ${namaUser}
+        </div>
+        <div style="font-size: 1.5rem; color: #334155; margin-top: 20px; text-align: center;">
+            Data Anda telah berhasil disimpan.<br><br>
+          <div style="background: #f8fafc; padding: 20px; border-radius: 15px; border: 2px solid #e2e8f0; border-top: 8px solid #16a34a; text-align: center; display: inline-block; min-width: 80%;">
+            <div style="display: flex; justify-content: center; align-items: baseline; gap: 8px; margin-bottom: 10px;">
+              <span style="color: #1B3A6B; font-size: 1.5rem; font-weight: bold;">BUKU</span>
+              <span style="font-size: 1.5rem; font-weight: 900; color: #1B3A6B; text-transform: uppercase;">${jenisBuku}</span>
+            </div>
+            <div style="color: #1B3A6B; font-weight: bold; line-height: 1.6;">
+              <div style="border-top: 1px solid #e2e8f0; padding-top: 10px; margin-top: 5px;">
+                 <span style="color: #1B3A6B;">NOMOR</span> ${nomorBuku}
+              </div>
+              <div>
+                 <span style="color: #1B3A6B;">HARI</span> ${tanggal}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      Swal.fire({
+        html: templatePesan,
+        icon: 'success',
+        confirmButtonText: 'LANJUTKAN!',
+        confirmButtonColor: '#16a34a', // Warna Hijau
+        background: '#ffffff',
+        width: '600px',
+        backdrop: `rgba(0,0,0,0.6)`,
+        focusConfirm: false, // Tambahkan ini agar tidak ada warna fokus otomatis
+      }).then((result) => {
+        if (result.isConfirmed) {
+          if(typeof clearForm === "function") clearForm(); 
+        }
+      });
+    }
+
+    // Letakkan di bagian bawah script Index.html
+    function clearForm() {
+      // 1. Kosongkan semua input teks dan tanggal
+      const inputs = document.querySelectorAll('input[type="text"], input[type="date"], textarea');
+      inputs.forEach(input => {
+        input.value = "";
+      });
+
+      // 2. Reset semua Select (Dropdown) ke pilihan pertama
+      const selects = document.querySelectorAll('select');
+      selects.forEach(select => {
+        select.selectedIndex = 0;
+      });
+
+      // 3. Uncheck semua Checkbox
+      const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+      checkboxes.forEach(cb => {
+        cb.checked = false;
+      });
+
+      // 4. Reset Array Penghadap (Jika ada input dinamis)
+      const container = document.getElementById('penghadap-container'); 
+      if (container) {
+        // Sisakan hanya satu input kosong untuk penghadap
+        container.innerHTML = '<input type="text" name="penghadap[]" class="form-control mb-2" placeholder="Nama Penghadap">';
+      }
+    }
+
+    function formatRupiah(elemen) {
+      let value = elemen.value.replace(/[^,\d]/g, "").toString();
+      let split = value.split(",");
+      let sisa = split[0].length % 3;
+      let rupiah = split[0].substr(0, sisa);
+      let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+      if (ribuan) {
+        let separator = sisa ? "." : "";
+        rupiah += separator + ribuan.join(".");
+      }
+
+      elemen.value = split[1] != undefined ? rupiah + "," + split[1] : rupiah;
+    }
+
+    // ======================================================================
+    // FITUR EDIT DATA - MENAMPILKAN KEMBALI FORM ENTRI (BUKAN POPUP KECIL)
+    // ======================================================================
+
+    // Dipanggil dari tombol EDIT pada baris Riwayat Data (Dashboard maupun Form Entri)
+    function pemicuEdit(bukuKey, subArsip, rowIndex, dataLama) {
+      // PENGAMAN: Pastikan dataLama adalah array
+      if (!Array.isArray(dataLama)) {
+        console.error("Data lama bukan array!");
+        return;
+      }
+
+      // 1. Simpan status edit secara global
+      editMode = true;
+      editBukuKey = bukuKey;
+      editSubArsip = subArsip;
+      editRowIndex = rowIndex;
+      editDataLama = dataLama;
+
+      // 2. Tampilkan view Form Entri, sembunyikan view lain
+      document.querySelectorAll('.view-section').forEach(sec => sec.classList.add('hidden'));
+      document.getElementById('view-ENTRY').classList.remove('hidden');
+
+      // 3. Sesuaikan tab & chip buku aktif dengan buku yang sedang diedit
+      currentEntryBook = bukuKey;
+      document.querySelectorAll('.tab-item-pembukuan').forEach(el => el.classList.remove('active'));
+      document.getElementById('nav-registrasi').classList.add('active');
+      document.querySelectorAll('.book-chip').forEach(el => el.classList.toggle('active', el.getAttribute('data-book') === bukuKey));
+
+      // 4. Render ulang form sesuai jenis buku (nomor otomatis diamankan oleh flag editMode)
+      changeBuku(bukuKey);
+
+      // 5. Isi form dengan data lama
+      isiFormUntukEdit(bukuKey, dataLama, subArsip);
+
+      // 6. Ubah judul, nomor, dan tombol menjadi mode edit
+      document.getElementById('judul-buku').innerText = 'EDIT DATA ' + bukuKey.replace('_', ' ');
+      document.getElementById('auto-no').innerText = dataLama[0] || '--';
+
+      const btnSubmit = document.getElementById('btnSubmitForm');
+      if (btnSubmit) {
+        btnSubmit.innerText = 'SIMPAN PERUBAHAN';
+        btnSubmit.classList.remove('bg-green-700', 'shadow-green-200');
+        btnSubmit.classList.add('bg-blue-600', 'shadow-blue-200');
+      }
+      const btnBatal = document.getElementById('btnBatalEdit');
+      if (btnBatal) btnBatal.classList.remove('hidden');
+      const banner = document.getElementById('editModeBanner');
+      if (banner) banner.classList.remove('hidden');
+
+      // 7. Scroll ke form
+      document.getElementById('main-content').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Mengisi seluruh field form entri sesuai jenis buku, memakai data baris lama
+    function isiFormUntukEdit(bukuKey, d, subArsip) {
+      // --- Tanggal ---
+      const tglIndex = (bukuKey === 'ARSIP') ? 3 : 1;
+      const tglObj = parseIndoDateJS(d[tglIndex]);
+      const tglInput = document.getElementById('tanggalInput');
+      if (tglObj && tglInput) {
+        const yyyy = tglObj.getFullYear();
+        const mm = String(tglObj.getMonth() + 1).padStart(2, '0');
+        const dd = String(tglObj.getDate()).padStart(2, '0');
+        const isoStr = yyyy + '-' + mm + '-' + dd;
+        tglInput.value = isoStr;
+        if (tglInput._flatpickr) { tglInput._flatpickr.setDate(isoStr, false); }
+        updateDateDisplay(isoStr);
+      }
+
+      // --- Field spesifik per jenis buku ---
+      if (bukuKey === 'SURAT_KELUAR') {
+        const el = document.querySelector('textarea[name="perihal"]');
+        if (el) el.value = d[2] || '';
+
+      } else if (bukuKey === 'ARSIP') {
+        document.getElementsByName('subArsip').forEach(r => { r.checked = (r.value === subArsip); });
+        const noAktaEl = document.querySelector('input[name="noAkta"]');
+        if (noAktaEl) noAktaEl.value = d[1] || '';
+        setSelectValueWhenReady('jenisAktaSelect', d[2]);
+        setPenghadapList(d[4] ? String(d[4]).split(',').map(s => s.trim()).filter(Boolean) : ['']);
+
+      } else if (bukuKey === 'WAARMERKING' || bukuKey === 'LEGALISASI') {
+        setSelectValueWhenReady('jenisAktaSelect', d[2]);
+        setPenghadapList(d[3] ? String(d[3]).split('\n').filter(Boolean) : ['']);
+
+      } else if (bukuKey === 'BPN') {
+        const prosesEl = document.querySelector('input[name="proses"]');
+        if (prosesEl) prosesEl.value = d[2] || '';
+        setPenghadapList(d[4] ? String(d[4]).split('\n').filter(Boolean) : ['']);
+
+      } else {
+        // NOTARIS, PPAT, COVERNOTE, KWITANSI
+        setSelectValueWhenReady('jenisAktaSelect', d[2]);
+        setSelectValueWhenReady('bSelect', d[3]);
+        if (bukuKey === 'KWITANSI') {
+          const nilaiEl = document.getElementById('nilaiKwitansi');
+          if (nilaiEl) { nilaiEl.value = d[5] || '0'; formatRupiah(nilaiEl); }
+        }
+        setPenghadapList(d[4] ? String(d[4]).split('\n').filter(Boolean) : ['']);
+      }
+
+      const autoNoEl = document.getElementById('auto-no');
+      if (autoNoEl) autoNoEl.innerText = d[0] || '--';
+    }
+
+    // Menunggu dropdown (jenis akta/bank) selesai dimuat dari server sebelum memilih nilai lama
+    function setSelectValueWhenReady(selectId, value, tries) {
+      tries = tries || 0;
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      if (sel.options.length <= 1 && tries < 25) {
+        setTimeout(() => setSelectValueWhenReady(selectId, value, tries + 1), 150);
+        return;
+      }
+      let found = false;
+      for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === value) { found = true; break; }
+      }
+      if (found) {
+        sel.value = value;
+      } else if (selectId === 'jenisAktaSelect' && value) {
+        // Jika jenis akta lama tidak ada di daftar pilihan, gunakan opsi "LAINNYA"
+        sel.value = 'LAINNYA';
+        checkJenisLainnya('LAINNYA');
+        const inp = document.getElementById('inputJenisLainnya');
+        if (inp) inp.value = value;
+      }
+    }
+
+    // Mengisi ulang daftar nama (penghadap/pemilik) di form sesuai data lama
+    function setPenghadapList(names) {
+      const container = document.getElementById('p-box');
+      if (!container) return;
+      if (!names || names.length === 0) names = [''];
+      container.innerHTML = '';
+      names.forEach((namaMentah, idx) => {
+        const namaBersih = String(namaMentah).replace(/^\d+\.\s*/, '').trim();
+        const div = document.createElement('div');
+        div.className = "flex items-center gap-3 row-nama";
+        div.innerHTML = `<span class="nomor-label font-black text-xl text-slate-800 w-8">${idx + 1}.</span>
+          <input type="text" class="input-nama flex-1 border-4 p-4 rounded-xl font-black text-lg outline-none focus:border-red-600 shadow-inner" placeholder="Isi Nama..." required>` +
+          (idx > 0 ? `<button type="button" onclick="removeInp(this)" class="bg-red-600 text-white p-4 rounded-xl shadow-md"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>` : '');
+        container.appendChild(div);
+        div.querySelector('.input-nama').value = namaBersih;
+      });
+    }
+
+    // Parser tanggal format Indonesia ("Senin, 01 April 2026") menjadi objek Date di sisi client
+    function parseIndoDateJS(str) {
+      if (!str || typeof str !== 'string') return null;
+      const bulanMap = { "Januari":0,"Februari":1,"Maret":2,"April":3,"Mei":4,"Juni":5,"Juli":6,"Agustus":7,"September":8,"Oktober":9,"November":10,"Desember":11 };
+      const parts = str.replace(/,/g, '').split(' ').filter(Boolean);
+      let idxBulan = -1;
+      for (let i = 0; i < parts.length; i++) {
+        if (bulanMap.hasOwnProperty(parts[i])) { idxBulan = i; break; }
+      }
+      if (idxBulan < 1 || idxBulan >= parts.length - 1) return null;
+      const tgl = parseInt(parts[idxBulan - 1]);
+      const thn = parseInt(parts[idxBulan + 1]);
+      if (isNaN(tgl) || isNaN(thn)) return null;
+      return new Date(thn, bulanMap[parts[idxBulan]], tgl);
+    }
+
+    // Membatalkan mode edit dan mengembalikan form ke keadaan "Tambah Data" semula
+    function batalEdit(tanpaKonfirmasi) {
+      const lakukanReset = () => {
+        editMode = false;
+        const bukuSebelumnya = editBukuKey || document.getElementById('currentType').value || 'NOTARIS';
+        editBukuKey = "";
+        editSubArsip = "";
+        editRowIndex = null;
+        editDataLama = null;
+
+        const btnSubmit = document.getElementById('btnSubmitForm');
+        if (btnSubmit) {
+          btnSubmit.innerText = 'SIMPAN DATA';
+          btnSubmit.classList.remove('bg-blue-600', 'shadow-blue-200');
+          btnSubmit.classList.add('bg-green-700', 'shadow-green-200');
+        }
+        const btnBatal = document.getElementById('btnBatalEdit');
+        if (btnBatal) btnBatal.classList.add('hidden');
+        const banner = document.getElementById('editModeBanner');
+        if (banner) banner.classList.add('hidden');
+
+        changeBuku(bukuSebelumnya);
+      };
+
+      if (tanpaKonfirmasi) {
+        lakukanReset();
+        return;
+      }
+
+      Swal.fire({
+        title: 'Batalkan Edit?',
+        text: 'Perubahan yang belum disimpan akan hilang.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Batalkan',
+        cancelButtonText: 'Lanjutkan Edit',
+        confirmButtonColor: '#dc2626'
+      }).then((r) => { if (r.isConfirmed) lakukanReset(); });
+    }
+
+    // Mengirim perubahan data (mode edit) ke server, menimpa baris lama di Spreadsheet
+    function submitEditData(bukuKey, data) {
+      const tglTeks = document.getElementById('date-text').innerText;
+      let finalRow = [...editDataLama];
+
+      if (bukuKey === 'SURAT_KELUAR') {
+        finalRow[1] = tglTeks;
+        finalRow[2] = data.perihal;
+
+      } else if (bukuKey === 'ARSIP') {
+        finalRow[1] = data.noAkta;
+        finalRow[2] = data.jenisAkta;
+        finalRow[3] = tglTeks;
+        finalRow[4] = data.penghadap.join(", ");
+
+      } else if (bukuKey === 'WAARMERKING' || bukuKey === 'LEGALISASI') {
+        finalRow[1] = tglTeks;
+        finalRow[2] = data.jenisAkta;
+        finalRow[3] = data.penghadap.join("\n");
+
+      } else if (bukuKey === 'KWITANSI') {
+        finalRow[1] = tglTeks;
+        finalRow[2] = data.jenisAkta;
+        finalRow[3] = data.bank || "-";
+        finalRow[4] = data.penghadap.join("\n");
+        finalRow[5] = Number((data.nilaiKwitansi || '0').toString().replace(/\./g, ""));
+
+      } else if (bukuKey === 'BPN') {
+        finalRow[1] = tglTeks;
+        if (data.proses !== undefined) finalRow[2] = data.proses;
+        if (data.pemilik) finalRow[4] = data.pemilik.join("\n");
+
+      } else {
+        // NOTARIS, PPAT, COVERNOTE
+        finalRow[1] = tglTeks;
+        finalRow[2] = data.jenisAkta;
+        finalRow[3] = data.bank || "-";
+        finalRow[4] = data.penghadap.join("\n");
+      }
+
+      const rowNumPasti = parseInt(editRowIndex);
+      const subArsipUntukSimpan = editSubArsip;
+
+      Swal.fire({
+        title: 'Menyimpan Perubahan...',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
+      google.script.run
+        .withSuccessHandler(res => {
+          document.getElementById('loading-overlay').style.display = 'none';
+          Swal.fire('Berhasil!', 'Data telah diperbarui.', 'success');
+          batalEdit(true); // keluar dari mode edit tanpa perlu konfirmasi lagi
+          loadHistoryToEntry(bukuKey);
+          if (typeof loadHistoryToDashboard === 'function' && currentActiveBook === bukuKey) {
+            loadHistoryToDashboard(bukuKey, true);
+          }
+        })
+        .withFailureHandler(err => {
+          document.getElementById('loading-overlay').style.display = 'none';
+          Swal.fire('Gagal!', 'Terjadi kesalahan: ' + err, 'error');
+        })
+        .updateDataUniversal(bukuKey, subArsipUntukSimpan, rowNumPasti, finalRow);
+    }
+  </script>
+</body>
+</html>
