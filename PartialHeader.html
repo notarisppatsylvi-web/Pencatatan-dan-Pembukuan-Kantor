@@ -1,0 +1,95 @@
+<!-- ============================================================================
+     HEADER TERPUSAT (SATU-SATUNYA SUMBER) - dipakai oleh SEMUA modul:
+     MenuUtama, HalamanArsip, HalamanPembukuan, HalamanSertifikat, HalamanSetup.
+
+     Header ini tampil PERMANEN (sticky) di setiap modul dengan struktur &
+     tampilan yang identik. Yang berbeda HANYA teks nama modul pada judul,
+     dikirim lewat variabel "judulHeader" ketika file ini dipanggil dari
+     bagian body masing-masing modul, memakai fungsi include(namaFile, data)
+     yang sudah didefinisikan di Code.gs.
+
+     PENTING: jangan tulis contoh tag scriptlet (tanda kurung sudut diikuti
+     tanda tanya) di dalam komentar mana pun pada file HTML manapun di
+     proyek ini - Apps Script akan tetap mencoba mengeksekusinya walau
+     berada di dalam komentar, dan akan menyebabkan error atau infinite
+     loop kalau tag tersebut menyebut file ini sendiri.
+
+     Untuk mengubah tampilan header di SEMUA modul sekaligus, cukup ubah
+     file ini saja - tidak perlu menyentuh file HTML modul manapun.
+     ============================================================================ -->
+<style>
+  .gh-header{
+    background:linear-gradient(180deg, #1B3A6B 0%, #122544 100%);
+    padding:10px 14px 0; position:sticky; top:0; z-index:80; width:100%; box-sizing:border-box;
+    font-family:'Inter', sans-serif;
+  }
+  .gh-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding-bottom:8px; }
+  .gh-left{ display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+  .gh-home{
+    width:36px; height:36px; border-radius:10px; background:#122544;
+    border:1.5px solid #C9A84C; display:flex; align-items:center; justify-content:center;
+    color:#C9A84C; text-decoration:none; flex:0 0 auto;
+  }
+  .gh-home:active{ transform:scale(0.9); }
+  .gh-home svg{ width:18px; height:18px; }
+  .gh-logo{
+    width:40px; height:40px; object-fit:contain; background:#fff; padding:3px; border-radius:50%;
+    border:2px solid #C9A84C; box-shadow:0 3px 8px rgba(0,0,0,0.3); flex:0 0 auto;
+  }
+  .gh-title{ text-align:center; flex:1 1 auto; min-width:0; }
+  .gh-title h1{
+    font-size:11px; font-weight:900; letter-spacing:0.2px; text-transform:uppercase;
+    color:#fff; margin:0; line-height:1.3;
+  }
+  .gh-title h2{
+    font-size:12px; font-weight:800; font-style:italic; color:#C9A84C; text-transform:uppercase;
+    margin:1px 0 0; line-height:1.3;
+  }
+  .gh-subbar{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    background:#122544; margin:0 -14px; padding:7px 14px; width:calc(100% + 28px); box-sizing:border-box;
+  }
+  #salamPengguna{
+    display:inline-flex; align-items:center; font-weight:800; text-transform:uppercase;
+    color:#fff; font-size:11px; gap:6px;
+  }
+  #salamPengguna::before{ content:"\f007"; font-family:"Font Awesome 6 Free"; font-weight:900; font-size:10px; }
+  .gh-datetime{ display:inline-flex; align-items:center; gap:6px; font-weight:700; font-size:11px; color:#fff; }
+  .gh-datetime #headerJam{ font-weight:900; }
+  .gh-gold-line{ height:3.5px; background:#C9A84C; margin:0 -14px; }
+  @media (max-width:768px){
+    .gh-title h1{ font-size:10px; }
+  }
+  @media (min-width:768px){
+    .gh-logo{ width:52px; height:52px; }
+    .gh-title h1{ font-size:20px; }
+    .gh-title h2{ font-size:19px; }
+    #salamPengguna, .gh-datetime{ font-size:13px; }
+  }
+</style>
+
+<header class="gh-header">
+  <div class="gh-row">
+    <div class="gh-left">
+      <a href="<?= baseUrl ?>?page=menu" target="_top" class="gh-home" title="Beranda">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h4a1 1 0 001-1v-5h4v5a1 1 0 001 1h4a1 1 0 001-1V10"/>
+        </svg>
+      </a>
+      <img src="https://lh3.googleusercontent.com/u/0/d/1gKumAIW038QM2K-Btw8TBYn9XhKRGU0M" class="gh-logo" alt="Logo Notaris">
+    </div>
+    <div class="gh-title">
+      <h1><?= judulHeader ?></h1>
+      <h2>SYLVI YERIZA S.H., M.K<span style="text-transform:none;">n</span></h2>
+    </div>
+    <img src="https://lh3.googleusercontent.com/u/0/d/1zqDRE8Tke8sObU5PL_8QSypkrcvmmjHZ" class="gh-logo" alt="Logo PPAT">
+  </div>
+  <div class="gh-subbar">
+    <div id="salamPengguna"><span>Masuk sebagai: -</span></div>
+    <div class="gh-datetime">
+      <span id="headerHari">--</span>
+      <span id="headerJam">00:00:00 WIB</span>
+    </div>
+  </div>
+  <div class="gh-gold-line"></div>
+</header>
