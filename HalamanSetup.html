@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Setup Admin</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --brand-primary: #1B3A6B;
+      --brand-primary-dark: #122544;
+      --brand-gold: #C9A84C;
+      --brand-gold-dark: #8A6A25;
+    }
+    body { background-color: #F1F5F9; font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+    .btn-primary {
+      --bs-btn-bg: var(--brand-primary);
+      --bs-btn-border-color: var(--brand-primary);
+      --bs-btn-hover-bg: var(--brand-primary-dark);
+      --bs-btn-hover-border-color: var(--brand-primary-dark);
+      --bs-btn-active-bg: var(--brand-primary-dark);
+      --bs-btn-active-border-color: var(--brand-primary-dark);
+    }
+    .bg-primary { background-color: var(--brand-primary) !important; }
+    .text-primary { color: var(--brand-primary) !important; }
+
+    /* ===== Gerbang Kunci Admin ===== */
+    #gateAdmin {
+      position: fixed; inset: 0; z-index: 2000;
+      background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-dark) 100%);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .gate-box {
+      background: #fff; border-radius: 20px; padding: 36px 28px; max-width: 380px; width: 100%;
+      text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+    .gate-box .lock-icon {
+      width: 64px; height: 64px; border-radius: 50%; background: #FDF3D9; border: 3px solid var(--brand-gold);
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: var(--brand-gold-dark); font-size: 26px;
+    }
+    .gate-box h3 { font-weight: 800; color: var(--brand-primary); font-size: 18px; margin-bottom: 6px; }
+    .gate-box p { color: #64748B; font-size: 13px; margin-bottom: 18px; }
+
+    /* Header sekarang terpusat di PartialHeader.html sehingga tampilannya
+       identik & permanen di semua modul (lihat include() di bagian body). */
+    .setup-mode-badge {
+      display: flex; justify-content: flex-end; padding: 10px 16px 0;
+    }
+
+    .setup-nav .nav-link {
+      font-weight: 800; font-size: 13px; color: var(--brand-primary); border-radius: 10px 10px 0 0;
+    }
+    .setup-nav .nav-link.active { background: #fff; color: var(--brand-primary-dark); border-bottom: 3px solid var(--brand-gold); }
+
+    .list-item-setup {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      background: #fff; border: 1px solid #E2E8F0; border-radius: 10px; padding: 10px 14px; margin-bottom: 8px;
+    }
+    .list-item-setup .badge-count { font-size: 10px; }
+    .empty-state { text-align: center; color: #94A3B8; padding: 30px 10px; }
+
+    .loading-overlay {
+      position: fixed; inset: 0; background: rgba(255,255,255,0.85); z-index: 1500;
+      display: none; align-items: center; justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== GERBANG KUNCI ADMIN ==================== -->
+  <div id="gateAdmin">
+    <div class="gate-box">
+      <div class="lock-icon"><i class="fa-solid fa-lock"></i></div>
+      <h3>Setup Admin</h3>
+      <p id="gateAdminPesan">Halaman ini hanya untuk Admin. Masukkan ID dan Password untuk melanjutkan.</p>
+      <input type="text" id="gateIdInput" class="form-control mb-2" placeholder="ID" autocomplete="off">
+      <input type="password" id="gatePwInput" class="form-control mb-3" placeholder="Password" autocomplete="off">
+      <button type="button" class="btn btn-primary w-100 fw-bold mb-2" id="btnGateMasuk">
+        <i class="fa-solid fa-right-to-bracket me-1"></i> Masuk
+      </button>
+      <a href="<?= baseUrl ?>?page=menu" target="_top" class="small text-muted text-decoration-none">
+        <i class="fa-solid fa-arrow-left me-1"></i>Kembali ke Menu Utama
+      </a>
+    </div>
+  </div>
+
+  <!-- ==================== OVERLAY LOADING ==================== -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="text-center">
+      <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;"></div>
+      <p class="fw-bold text-dark fs-6" id="loadingText">Memproses...</p>
+    </div>
+  </div>
+
+  <!-- ==================== ISI HALAMAN SETUP (tersembunyi sampai lolos gerbang) ==================== -->
+  <div id="isiSetup" style="display:none;">
+    <?!= include('PartialHeader', {judulHeader: judulHeader, baseUrl: baseUrl}); ?>
+    <div class="setup-mode-badge">
+      <span class="badge bg-warning text-dark fw-bold"><i class="fa-solid fa-user-shield me-1"></i>MODE ADMIN</span>
+    </div>
+
+    <div class="container my-4">
+      <ul class="nav nav-tabs setup-nav mb-3" id="setupTab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="tab-arsip-btn" data-bs-toggle="tab" data-bs-target="#tab-arsip" type="button">
+            <i class="fa-solid fa-box-archive me-1"></i> Modul Arsip
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-sertifikat-btn" data-bs-toggle="tab" data-bs-target="#tab-sertifikat" type="button">
+            <i class="fa-solid fa-file-shield me-1"></i> Modul Sertifikat
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-pembukuan-btn" data-bs-toggle="tab" data-bs-target="#tab-pembukuan" type="button">
+            <i class="fa-solid fa-book me-1"></i> Modul Pembukuan
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="tab-karyawan-btn" data-bs-toggle="tab" data-bs-target="#tab-karyawan" type="button">
+            <i class="fa-solid fa-users me-1"></i> Karyawan
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content" id="setupTabContent">
+
+        <!-- ========== TAB: MODUL ARSIP (Dropdown Bank Umum & Penanggung Jawab) ========== -->
+        <div class="tab-pane fade show active" id="tab-arsip" role="tabpanel">
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body d-flex flex-wrap align-items-center gap-3">
+              <span class="fw-bold text-dark"><i class="fa-solid fa-book-open me-1 text-primary"></i>Buku Aktif:</span>
+              <div class="btn-group" role="group">
+                <button type="button" class="btn btn-sm btn-primary fw-bold" id="arsipBukuNotarisBtn" onclick="pilihBukuDropdownArsip('NOTARIS')">NOTARIS</button>
+                <button type="button" class="btn btn-sm btn-outline-primary fw-bold" id="arsipBukuPpatBtn" onclick="pilihBukuDropdownArsip('PPAT')">PPAT</button>
+              </div>
+              <span class="text-muted small">Pilih buku Arsip yang dropdown-nya ingin diubah.</span>
+              <button type="button" class="btn btn-sm btn-outline-success fw-bold ms-auto" onclick="bukaSpreadsheetModul('ARSIP_' + arsipBukuDropdownAktif, 'Spreadsheet Arsip ' + arsipBukuDropdownAktif)">
+                <i class="fa-solid fa-file-excel me-1"></i> Buka Spreadsheet
+              </button>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold text-secondary"><i class="fa-solid fa-building-columns me-2"></i>Bank / Proses Umum</div>
+                <div class="card-body">
+                  <div class="input-group mb-3">
+                    <input type="text" id="inputArsipBankBaru" class="form-control form-control-sm" placeholder="Tambah bank/proses...">
+                    <button class="btn btn-sm btn-primary" type="button" onclick="tambahDropdownArsipUI('bankUmum')"><i class="fa-solid fa-plus"></i></button>
+                  </div>
+                  <div id="listArsipBankUmum"><div class="empty-state small">Memuat...</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold text-secondary"><i class="fa-solid fa-user-gear me-2"></i>Penanggung Jawab</div>
+                <div class="card-body">
+                  <div class="input-group mb-3">
+                    <input type="text" id="inputArsipPJBaru" class="form-control form-control-sm" placeholder="Tambah nama PJ...">
+                    <button class="btn btn-sm btn-primary" type="button" onclick="tambahDropdownArsipUI('penanggungJawab')"><i class="fa-solid fa-plus"></i></button>
+                  </div>
+                  <div id="listArsipPenanggungJawab"><div class="empty-state small">Memuat...</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== TAB: MODUL SERTIFIKAT (Bank + Dropdown) ========== -->
+        <div class="tab-pane fade" id="tab-sertifikat" role="tabpanel">
+
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+              <h6 class="fw-bold text-dark mb-1"><i class="fa-solid fa-circle-plus me-1 text-primary"></i>Tambah Bank / Kategori Baru</h6>
+              <p class="text-muted small mb-3">Setiap Bank akan dibuat sebagai sheet baru pada Spreadsheet Sertifikat, lengkap dengan kolom standar.</p>
+              <div class="input-group">
+                <input type="text" id="inputBankBaru" class="form-control" placeholder="Contoh: BANK MANDIRI">
+                <button class="btn btn-primary fw-bold" type="button" onclick="tambahBankSetupUI()">
+                  <i class="fa-solid fa-plus me-1"></i> Tambah
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white fw-bold text-secondary d-flex justify-content-between align-items-center">
+              <span><i class="fa-solid fa-list me-2"></i>Daftar Bank Saat Ini</span>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-success fw-bold" onclick="bukaSpreadsheetModul('SERTIFIKAT_MAIN', 'Spreadsheet Sertifikat')">
+                  <i class="fa-solid fa-file-excel me-1"></i> Buka Spreadsheet
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="muatDaftarBank()"><i class="fa-solid fa-rotate"></i></button>
+              </div>
+            </div>
+            <div class="card-body" id="listBankSetup">
+              <div class="empty-state"><i class="fa-solid fa-spinner fa-spin fa-lg mb-2 d-block"></i>Memuat...</div>
+            </div>
+          </div>
+
+          <div class="row g-3">
+
+            <div class="col-md-4">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold text-secondary"><i class="fa-solid fa-file-contract me-2"></i>Jenis Hak</div>
+                <div class="card-body">
+                  <div class="input-group mb-3">
+                    <input type="text" id="inputJenisHakBaru" class="form-control form-control-sm" placeholder="Tambah jenis hak...">
+                    <button class="btn btn-sm btn-primary" type="button" onclick="tambahDropdownUI('jenisHak')"><i class="fa-solid fa-plus"></i></button>
+                  </div>
+                  <div id="listJenisHak"><div class="empty-state small">Memuat...</div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold text-secondary"><i class="fa-solid fa-arrows-spin me-2"></i>Proses</div>
+                <div class="card-body">
+                  <div class="input-group mb-3">
+                    <input type="text" id="inputProsesBaru" class="form-control form-control-sm" placeholder="Tambah proses...">
+                    <button class="btn btn-sm btn-primary" type="button" onclick="tambahDropdownUI('proses')"><i class="fa-solid fa-plus"></i></button>
+                  </div>
+                  <div id="listProses"><div class="empty-state small">Memuat...</div></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold text-secondary"><i class="fa-solid fa-user-gear me-2"></i>Penanggung Jawab</div>
+                <div class="card-body">
+                  <div class="input-group mb-3">
+                    <input type="text" id="inputPJBaru" class="form-control form-control-sm" placeholder="Tambah nama PJ...">
+                    <button class="btn btn-sm btn-primary" type="button" onclick="tambahDropdownUI('penanggungJawab')"><i class="fa-solid fa-plus"></i></button>
+                  </div>
+                  <div id="listPenanggungJawab"><div class="empty-state small">Memuat...</div></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ========== TAB: MODUL PEMBUKUAN (Dropdown Jenis Akta & Bank) ========== -->
+        <div class="tab-pane fade" id="tab-pembukuan" role="tabpanel">
+
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white fw-bold text-secondary"><i class="fa-solid fa-file-excel me-2"></i>Buka Spreadsheet Buku Pembukuan</div>
+            <div class="card-body">
+              <p class="text-muted small mb-3">Klik salah satu buku untuk membuka Spreadsheet aslinya langsung di Google Sheets.</p>
+              <div class="row g-2" id="pembukuanSpreadsheetGrid">
+                <div class="col-6 col-md-3">
+                  <button type="button" class="btn btn-outline-primary btn-sm w-100 fw-bold" onclick="bukaSpreadsheetModul('PEMBUKUAN_NOTARIS', 'Buku Notaris')">Buku Notaris</button>
+                </div>
+                <div class="col-6 col-md-3">
+                  <button type="button" class="btn btn-outline-primary btn-sm w-100 fw-bold" onclick="bukaSpreadsheetModul('PEMBUKUAN_PPAT', 'Buku PPAT')">Buku PPAT</button>
+                </div>
+                <div class="col-6 col-md-3">
+                  <button type="button" class="btn btn-outline-primary btn-sm w-100 fw-bold" onclick="bukaSpreadsheetModul('PEMBUKUAN_LEGALISASI', 'Buku Legalisasi')">Buku Legalisasi</button>
+                </div>
+                <div class="col-6 col-md-3">
+                  <button type="button" class="btn btn-outline-primary btn-sm w-100 fw-bold" onclick="bukaSpreadsheetModul('PEMBUKUAN_WAARMERKING', 'Buku Waarmerking')">Buku Waarmerking</button>
+                </div>
+                <div class="col-6 col-md-3">
+                  <button type="button" class="btn btn-outline-primary btn-sm w-100 fw-bold" onclick="bukaSpreadsheetModul('PEMBUKUAN_COVERNOTE', 'Buku Covernote')">Buku Covernote</button>
+                </div>
+                <div class="col-6 col-md-3">
+                  <button type="button" class="btn btn-outline-primary btn-sm w-100 fw-bold" onclick="bukaSpreadsheetModul('PEMBUKUAN_KWITANSI', 'Buku Kwitansi')">Buku Kwitansi</button>
+                </div>
+                <div class="col-6 col-md-3">
+                  <button type="button" class="btn btn-outline-primary btn-sm w-100 fw-bold" onclick="bukaSpreadsheetModul('PEMBUKUAN_BPN', 'Buku Berkas BPN')">Buku Berkas BPN</button>
+                </div>
+                <div class="col-6 col-md-3">
+                  <button type="button" class="btn btn-outline-primary btn-sm w-100 fw-bold" onclick="bukaSpreadsheetModul('PEMBUKUAN_SURAT_KELUAR', 'Buku Surat Keluar')">Buku Surat Keluar</button>
+                </div>
+                <div class="col-6 col-md-3">
+                  <button type="button" class="btn btn-outline-warning btn-sm w-100 fw-bold" onclick="bukaSpreadsheetModul('PEMBUKUAN_DASHBOARD_SETTING', 'Dashboard Setting')">
+                    <i class="fa-solid fa-gear me-1"></i> Dashboard Setting
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold text-secondary"><i class="fa-solid fa-file-contract me-2"></i>Jenis Akta</div>
+                <div class="card-body">
+                  <div class="input-group mb-3">
+                    <input type="text" id="inputPembukuanJenisAktaBaru" class="form-control form-control-sm" placeholder="Tambah jenis akta...">
+                    <button class="btn btn-sm btn-primary" type="button" onclick="tambahDropdownPembukuanUI('jenisAkta')"><i class="fa-solid fa-plus"></i></button>
+                  </div>
+                  <div id="listPembukuanJenisAkta"><div class="empty-state small">Memuat...</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white fw-bold text-secondary"><i class="fa-solid fa-building-columns me-2"></i>Bank</div>
+                <div class="card-body">
+                  <div class="input-group mb-3">
+                    <input type="text" id="inputPembukuanBankBaru" class="form-control form-control-sm" placeholder="Tambah bank...">
+                    <button class="btn btn-sm btn-primary" type="button" onclick="tambahDropdownPembukuanUI('bank')"><i class="fa-solid fa-plus"></i></button>
+                  </div>
+                  <div id="listPembukuanBank"><div class="empty-state small">Memuat...</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== TAB: KARYAWAN ========== -->
+        <div class="tab-pane fade" id="tab-karyawan" role="tabpanel">
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+              <h6 class="fw-bold text-dark mb-1"><i class="fa-solid fa-user-plus me-1 text-primary"></i>Tambah Karyawan Baru</h6>
+              <p class="text-muted small mb-3">Nama yang ditambahkan di sini akan bisa login mengisi identitas di Menu Utama untuk mengakses sistem.</p>
+              <div class="input-group">
+                <input type="text" id="inputKaryawanBaru" class="form-control" placeholder="Contoh: BUDI">
+                <button class="btn btn-primary fw-bold" type="button" onclick="tambahKaryawanUI()">
+                  <i class="fa-solid fa-plus me-1"></i> Tambah
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white fw-bold text-secondary d-flex justify-content-between align-items-center">
+              <span><i class="fa-solid fa-users me-2"></i>Daftar Karyawan yang Diizinkan Masuk</span>
+              <button class="btn btn-sm btn-outline-secondary" onclick="muatDaftarKaryawan()"><i class="fa-solid fa-rotate"></i></button>
+            </div>
+            <div class="card-body" id="listKaryawanSetup">
+              <div class="empty-state"><i class="fa-solid fa-spinner fa-spin fa-lg mb-2 d-block"></i>Memuat...</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    // Kredensial admin disimpan HANYA di memori (variabel JS) selama sesi
+    // halaman ini terbuka, dan dikirim ulang ke server pada SETIAP pemanggilan
+    // fungsi kelola data sebagai lapisan keamanan kedua (defense-in-depth),
+    // konsisten dengan pola verifikasi ID/Password di seluruh sistem ini.
+    var ADMIN_ID = "";
+    var ADMIN_PW = "";
+
+    function showLoading(text) {
+      document.getElementById('loadingText').innerText = text || "Memproses...";
+      document.getElementById('loadingOverlay').style.display = "flex";
+    }
+    function hideLoading() {
+      document.getElementById('loadingOverlay').style.display = "none";
+    }
+
+    // ===== Header Terpusat: jam/tanggal & salam pengguna =====
+    // Mengisi #headerHari, #headerJam, #salamPengguna pada header terpusat
+    // (PartialHeader.html) dengan pola yang sama dipakai modul lain, supaya
+    // header tampil konsisten & aktif di halaman Setup ini juga.
+    function initHeaderInfo() {
+      var idDays = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+      var idMonths = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+
+      function tick() {
+        var now = new Date();
+        var elHari = document.getElementById('headerHari');
+        var elJam = document.getElementById('headerJam');
+        var h = String(now.getHours()).padStart(2, '0');
+        var m = String(now.getMinutes()).padStart(2, '0');
+        var s = String(now.getSeconds()).padStart(2, '0');
+        if (elHari) elHari.innerText = idDays[now.getDay()] + ", " + now.getDate() + " " + idMonths[now.getMonth()] + " " + now.getFullYear();
+        if (elJam) elJam.innerText = h + ":" + m + ":" + s + " WIB";
+      }
+      tick();
+      setInterval(tick, 1000);
+
+      var nama = sessionStorage.getItem('skn_nama_karyawan');
+      var elSalam = document.getElementById('salamPengguna');
+      if (elSalam) {
+        var span = elSalam.querySelector('span');
+        if (span) span.innerText = 'Masuk sebagai: ' + (nama || 'ADMIN');
+      }
+    }
+
+    function bukaHalamanSetup() {
+      document.getElementById('gateAdmin').style.display = "none";
+      document.getElementById('isiSetup').style.display = "block";
+      initHeaderInfo();
+      muatDropdownArsip();
+      muatDaftarBank();
+      muatDropdownSertifikat();
+      muatDropdownPembukuan();
+      muatDaftarKaryawan();
+    }
+
+    // ==================== FITUR TERPUSAT: BUKA SPREADSHEET ====================
+    // Dipakai oleh SEMUA modul (Arsip, Sertifikat, Pembukuan) - dipindahkan ke
+    // sini supaya admin cukup login SEKALI di halaman Setup untuk membuka
+    // spreadsheet manapun, tanpa perlu memasukkan ID & Password lagi di setiap
+    // modul terpisah. keyIdentifier merujuk ke PETA_URL_SPREADSHEET di Code.gs.
+    function bukaSpreadsheetModul(keyIdentifier, label) {
+      Swal.fire({
+        title: 'Membuka ' + (label || 'Spreadsheet') + '...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      });
+      google.script.run
+        .withSuccessHandler(function (res) {
+          if (res && res.success) {
+            Swal.close();
+            window.open(res.url, '_blank');
+          } else {
+            Swal.fire('Gagal', res ? res.message : 'Spreadsheet tidak ditemukan.', 'error');
+          }
+        })
+        .withFailureHandler(function (err) {
+          Swal.fire('Gagal', err.message, 'error');
+        })
+        .verifikasiAksesSpreadsheet(ADMIN_ID, ADMIN_PW, keyIdentifier);
+    }
+
+    function verifikasiDanMasuk(id, pw, tampilkanErrorJikaGagal) {
+      google.script.run
+        .withSuccessHandler(function (res) {
+          if (res && res.success) {
+            ADMIN_ID = id;
+            ADMIN_PW = pw;
+            bukaHalamanSetup();
+          } else if (tampilkanErrorJikaGagal) {
+            document.getElementById('gateAdminPesan').innerHTML = '<span class="text-danger fw-bold">' + (res ? res.message : 'ID atau Password salah.') + '</span>';
+          }
+        })
+        .withFailureHandler(function (err) {
+          if (tampilkanErrorJikaGagal) {
+            document.getElementById('gateAdminPesan').innerHTML = '<span class="text-danger fw-bold">Gagal terhubung: ' + err.toString() + '</span>';
+          }
+        })
+        .verifikasiAksesSetup(id, pw);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      document.getElementById('btnGateMasuk').addEventListener('click', function () {
+        var id = document.getElementById('gateIdInput').value;
+        var pw = document.getElementById('gatePwInput').value;
+        if (!id || !pw) {
+          document.getElementById('gateAdminPesan').innerHTML = '<span class="text-danger fw-bold">ID dan Password wajib diisi.</span>';
+          return;
+        }
+        document.getElementById('gateAdminPesan').innerText = "Memverifikasi...";
+        verifikasiDanMasuk(id, pw, true);
+      });
+
+      document.getElementById('gatePwInput').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') document.getElementById('btnGateMasuk').click();
+      });
+    });
+
+    // ==================== 1. KELOLA BANK SERTIFIKAT ====================
+
+    function muatDaftarBank() {
+      const container = document.getElementById('listBankSetup');
+      container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-spinner fa-spin fa-lg mb-2 d-block"></i>Memuat...</div>`;
+      google.script.run
+        .withSuccessHandler(function (res) {
+          if (res && res.success) {
+            renderDaftarBank(res.daftar || []);
+          } else {
+            container.innerHTML = `<div class="empty-state text-danger">${res ? res.message : 'Gagal memuat data.'}</div>`;
+          }
+        })
+        .withFailureHandler(function (err) {
+          container.innerHTML = `<div class="empty-state text-danger">${err.toString()}</div>`;
+        })
+        .getDaftarBankSetup(ADMIN_ID, ADMIN_PW);
+    }
+
+    function renderDaftarBank(daftar) {
+      const container = document.getElementById('listBankSetup');
+      container.innerHTML = "";
+      if (!daftar || daftar.length === 0) {
+        container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-folder-open fa-lg mb-2 d-block"></i>Belum ada Bank terdaftar.</div>`;
+        return;
+      }
+      daftar.forEach(item => {
+        const row = document.createElement('div');
+        row.className = "list-item-setup";
+        row.innerHTML = `
+          <div>
+            <span class="fw-bold text-dark">${item.nama}</span>
+            <span class="badge bg-light text-dark border ms-2 badge-count">${item.jumlahData} data</span>
+          </div>
+          <button class="btn btn-sm btn-outline-danger" onclick="hapusBankSetupUI('${item.nama.replace(/'/g, "\\'")}', ${item.jumlahData})">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function tambahBankSetupUI() {
+      const input = document.getElementById('inputBankBaru');
+      const nama = input.value.trim();
+      if (!nama) {
+        Swal.fire('Perhatian', 'Nama Bank tidak boleh kosong.', 'warning');
+        return;
+      }
+      showLoading("Menambahkan Bank...");
+      google.script.run
+        .withSuccessHandler(function (res) {
+          hideLoading();
+          if (res && res.success) {
+            input.value = "";
+            Swal.fire('Berhasil', res.message, 'success');
+            muatDaftarBank();
+          } else {
+            Swal.fire('Gagal', res ? res.message : 'Terjadi kesalahan.', 'error');
+          }
+        })
+        .withFailureHandler(function (err) {
+          hideLoading();
+          Swal.fire('Gagal', err.toString(), 'error');
+        })
+        .tambahBankSetup(ADMIN_ID, ADMIN_PW, nama);
+    }
+
+    function hapusBankSetupUI(nama, jumlahData) {
+      let teksKonfirmasi = `Apakah Anda yakin ingin menghapus Bank "${nama}"?`;
+      if (jumlahData > 0) {
+        teksKonfirmasi = `Bank "${nama}" masih memiliki ${jumlahData} data. Menghapus Bank ini akan MENGHAPUS PERMANEN seluruh data tersebut. Apakah Anda tetap yakin?`;
+      }
+      Swal.fire({
+        title: 'Hapus Bank?',
+        text: teksKonfirmasi,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#DC2626'
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+        showLoading("Menghapus Bank...");
+        google.script.run
+          .withSuccessHandler(function (res) {
+            hideLoading();
+            if (res && res.success) {
+              Swal.fire('Berhasil', res.message, 'success');
+              muatDaftarBank();
+            } else {
+              Swal.fire('Gagal', res ? res.message : 'Terjadi kesalahan.', 'error');
+            }
+          })
+          .withFailureHandler(function (err) {
+            hideLoading();
+            Swal.fire('Gagal', err.toString(), 'error');
+          })
+          .hapusBankSertifikat(ADMIN_ID, ADMIN_PW, nama, true);
+      });
+    }
+
+    // ==================== 1b. KELOLA DROPDOWN ARSIP (Bank Umum / Penanggung Jawab) ====================
+
+    var arsipBukuDropdownAktif = 'NOTARIS';
+
+    const PETA_LIST_DROPDOWN_ARSIP = {
+      bankUmum: 'listArsipBankUmum',
+      penanggungJawab: 'listArsipPenanggungJawab'
+    };
+    const PETA_INPUT_DROPDOWN_ARSIP = {
+      bankUmum: 'inputArsipBankBaru',
+      penanggungJawab: 'inputArsipPJBaru'
+    };
+
+    function pilihBukuDropdownArsip(jenis) {
+      arsipBukuDropdownAktif = jenis;
+      document.getElementById('arsipBukuNotarisBtn').className = 'btn btn-sm fw-bold ' + (jenis === 'NOTARIS' ? 'btn-primary' : 'btn-outline-primary');
+      document.getElementById('arsipBukuPpatBtn').className = 'btn btn-sm fw-bold ' + (jenis === 'PPAT' ? 'btn-primary' : 'btn-outline-primary');
+      muatDropdownArsip();
+    }
+
+    function muatDropdownArsip() {
+      Object.values(PETA_LIST_DROPDOWN_ARSIP).forEach(id => {
+        document.getElementById(id).innerHTML = `<div class="empty-state small"><i class="fa-solid fa-spinner fa-spin mb-1 d-block"></i>Memuat...</div>`;
+      });
+      google.script.run
+        .withSuccessHandler(function (res) {
+          if (res && res.success) {
+            renderDropdownListArsip('bankUmum', res.bankUmum || []);
+            renderDropdownListArsip('penanggungJawab', res.penanggungJawab || []);
+          } else {
+            Object.values(PETA_LIST_DROPDOWN_ARSIP).forEach(id => {
+              document.getElementById(id).innerHTML = `<div class="empty-state text-danger small">${res ? res.message : 'Gagal memuat.'}</div>`;
+            });
+          }
+        })
+        .withFailureHandler(function (err) {
+          Object.values(PETA_LIST_DROPDOWN_ARSIP).forEach(id => {
+            document.getElementById(id).innerHTML = `<div class="empty-state text-danger small">${err.toString()}</div>`;
+          });
+        })
+        .getSetupDropdownArsip(ADMIN_ID, ADMIN_PW, arsipBukuDropdownAktif);
+    }
+
+    function renderDropdownListArsip(jenis, daftar) {
+      const container = document.getElementById(PETA_LIST_DROPDOWN_ARSIP[jenis]);
+      container.innerHTML = "";
+      if (!daftar || daftar.length === 0) {
+        container.innerHTML = `<div class="empty-state small">Belum ada data.</div>`;
+        return;
+      }
+      daftar.forEach(nilai => {
+        const row = document.createElement('div');
+        row.className = "list-item-setup py-1 px-2";
+        row.innerHTML = `
+          <span class="small fw-semibold text-dark">${nilai}</span>
+          <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="hapusDropdownArsipUI('${jenis}', '${nilai.toString().replace(/'/g, "\\'")}')">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function tambahDropdownArsipUI(jenis) {
+      const input = document.getElementById(PETA_INPUT_DROPDOWN_ARSIP[jenis]);
+      const nilai = input.value.trim();
+      if (!nilai) {
+        Swal.fire('Perhatian', 'Nilai tidak boleh kosong.', 'warning');
+        return;
+      }
+      showLoading("Menambahkan data...");
+      google.script.run
+        .withSuccessHandler(function (res) {
+          hideLoading();
+          if (res && res.success) {
+            input.value = "";
+            muatDropdownArsip();
+          } else {
+            Swal.fire('Gagal', res ? res.message : 'Terjadi kesalahan.', 'error');
+          }
+        })
+        .withFailureHandler(function (err) {
+          hideLoading();
+          Swal.fire('Gagal', err.toString(), 'error');
+        })
+        .tambahDropdownArsip(ADMIN_ID, ADMIN_PW, arsipBukuDropdownAktif, jenis, nilai);
+    }
+
+    function hapusDropdownArsipUI(jenis, nilai) {
+      Swal.fire({
+        title: 'Hapus Data?',
+        text: `Hapus "${nilai}" dari daftar?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#DC2626'
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+        showLoading("Menghapus data...");
+        google.script.run
+          .withSuccessHandler(function (res) {
+            hideLoading();
+            if (res && res.success) {
+              muatDropdownArsip();
+            } else {
+              Swal.fire('Gagal', res ? res.message : 'Terjadi kesalahan.', 'error');
+            }
+          })
+          .withFailureHandler(function (err) {
+            hideLoading();
+            Swal.fire('Gagal', err.toString(), 'error');
+          })
+          .hapusDropdownArsip(ADMIN_ID, ADMIN_PW, arsipBukuDropdownAktif, jenis, nilai);
+      });
+    }
+
+    // ==================== 2. KELOLA DROPDOWN SERTIFIKAT ====================
+
+    const PETA_LIST_DROPDOWN = {
+      jenisHak: 'listJenisHak',
+      proses: 'listProses',
+      penanggungJawab: 'listPenanggungJawab'
+    };
+    const PETA_INPUT_DROPDOWN = {
+      jenisHak: 'inputJenisHakBaru',
+      proses: 'inputProsesBaru',
+      penanggungJawab: 'inputPJBaru'
+    };
+
+    function muatDropdownSertifikat() {
+      Object.values(PETA_LIST_DROPDOWN).forEach(id => {
+        document.getElementById(id).innerHTML = `<div class="empty-state small"><i class="fa-solid fa-spinner fa-spin mb-1 d-block"></i>Memuat...</div>`;
+      });
+      google.script.run
+        .withSuccessHandler(function (res) {
+          if (res && res.success) {
+            renderDropdownList('jenisHak', res.jenisHak || []);
+            renderDropdownList('proses', res.proses || []);
+            renderDropdownList('penanggungJawab', res.penanggungJawab || []);
+          } else {
+            Object.values(PETA_LIST_DROPDOWN).forEach(id => {
+              document.getElementById(id).innerHTML = `<div class="empty-state text-danger small">${res ? res.message : 'Gagal memuat.'}</div>`;
+            });
+          }
+        })
+        .withFailureHandler(function (err) {
+          Object.values(PETA_LIST_DROPDOWN).forEach(id => {
+            document.getElementById(id).innerHTML = `<div class="empty-state text-danger small">${err.toString()}</div>`;
+          });
+        })
+        .getSetupDropdownSertifikat(ADMIN_ID, ADMIN_PW);
+    }
+
+    function renderDropdownList(jenis, daftar) {
+      const container = document.getElementById(PETA_LIST_DROPDOWN[jenis]);
+      container.innerHTML = "";
+      if (!daftar || daftar.length === 0) {
+        container.innerHTML = `<div class="empty-state small">Belum ada data.</div>`;
+        return;
+      }
+      daftar.forEach(nilai => {
+        const row = document.createElement('div');
+        row.className = "list-item-setup py-1 px-2";
+        row.innerHTML = `
+          <span class="small fw-semibold text-dark">${nilai}</span>
+          <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="hapusDropdownUI('${jenis}', '${nilai.toString().replace(/'/g, "\\'")}')">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function tambahDropdownUI(jenis) {
+      const input = document.getElementById(PETA_INPUT_DROPDOWN[jenis]);
+      const nilai = input.value.trim();
+      if (!nilai) {
+        Swal.fire('Perhatian', 'Nilai tidak boleh kosong.', 'warning');
+        return;
+      }
+      showLoading("Menambahkan data...");
+      google.script.run
+        .withSuccessHandler(function (res) {
+          hideLoading();
+          if (res && res.success) {
+            input.value = "";
+            muatDropdownSertifikat();
+          } else {
+            Swal.fire('Gagal', res ? res.message : 'Terjadi kesalahan.', 'error');
+          }
+        })
+        .withFailureHandler(function (err) {
+          hideLoading();
+          Swal.fire('Gagal', err.toString(), 'error');
+        })
+        .tambahDropdownSertifikat(ADMIN_ID, ADMIN_PW, jenis, nilai);
+    }
+
+    function hapusDropdownUI(jenis, nilai) {
+      Swal.fire({
+        title: 'Hapus Data?',
+        text: `Hapus "${nilai}" dari daftar?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#DC2626'
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+        showLoading("Menghapus data...");
+        google.script.run
+          .withSuccessHandler(function (res) {
+            hideLoading();
+            if (res && res.success) {
+              muatDropdownSertifikat();
+            } else {
+              Swal.fire('Gagal', res ? res.message : 'Terjadi kesalahan.', 'error');
+            }
+          })
+          .withFailureHandler(function (err) {
+            hideLoading();
+            Swal.fire('Gagal', err.toString(), 'error');
+          })
+          .hapusDropdownSertifikat(ADMIN_ID, ADMIN_PW, jenis, nilai);
+      });
+    }
+
+    // ==================== 2b. KELOLA DROPDOWN PEMBUKUAN (Jenis Akta / Bank) ====================
+
+    const PETA_LIST_DROPDOWN_PEMBUKUAN = {
+      jenisAkta: 'listPembukuanJenisAkta',
+      bank: 'listPembukuanBank'
+    };
+    const PETA_INPUT_DROPDOWN_PEMBUKUAN = {
+      jenisAkta: 'inputPembukuanJenisAktaBaru',
+      bank: 'inputPembukuanBankBaru'
+    };
+
+    function muatDropdownPembukuan() {
+      Object.values(PETA_LIST_DROPDOWN_PEMBUKUAN).forEach(id => {
+        document.getElementById(id).innerHTML = `<div class="empty-state small"><i class="fa-solid fa-spinner fa-spin mb-1 d-block"></i>Memuat...</div>`;
+      });
+      google.script.run
+        .withSuccessHandler(function (res) {
+          if (res && res.success) {
+            renderDropdownListPembukuan('jenisAkta', res.jenisAkta || []);
+            renderDropdownListPembukuan('bank', res.bank || []);
+          } else {
+            Object.values(PETA_LIST_DROPDOWN_PEMBUKUAN).forEach(id => {
+              document.getElementById(id).innerHTML = `<div class="empty-state text-danger small">${res ? res.message : 'Gagal memuat.'}</div>`;
+            });
+          }
+        })
+        .withFailureHandler(function (err) {
+          Object.values(PETA_LIST_DROPDOWN_PEMBUKUAN).forEach(id => {
+            document.getElementById(id).innerHTML = `<div class="empty-state text-danger small">${err.toString()}</div>`;
+          });
+        })
+        .getSetupDropdownPembukuan(ADMIN_ID, ADMIN_PW);
+    }
+
+    function renderDropdownListPembukuan(jenis, daftar) {
+      const container = document.getElementById(PETA_LIST_DROPDOWN_PEMBUKUAN[jenis]);
+      container.innerHTML = "";
+      if (!daftar || daftar.length === 0) {
+        container.innerHTML = `<div class="empty-state small">Belum ada data.</div>`;
+        return;
+      }
+      daftar.forEach(nilai => {
+        const row = document.createElement('div');
+        row.className = "list-item-setup py-1 px-2";
+        row.innerHTML = `
+          <span class="small fw-semibold text-dark">${nilai}</span>
+          <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="hapusDropdownPembukuanUI('${jenis}', '${nilai.toString().replace(/'/g, "\\'")}')">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function tambahDropdownPembukuanUI(jenis) {
+      const input = document.getElementById(PETA_INPUT_DROPDOWN_PEMBUKUAN[jenis]);
+      const nilai = input.value.trim();
+      if (!nilai) {
+        Swal.fire('Perhatian', 'Nilai tidak boleh kosong.', 'warning');
+        return;
+      }
+      showLoading("Menambahkan data...");
+      google.script.run
+        .withSuccessHandler(function (res) {
+          hideLoading();
+          if (res && res.success) {
+            input.value = "";
+            muatDropdownPembukuan();
+          } else {
+            Swal.fire('Gagal', res ? res.message : 'Terjadi kesalahan.', 'error');
+          }
+        })
+        .withFailureHandler(function (err) {
+          hideLoading();
+          Swal.fire('Gagal', err.toString(), 'error');
+        })
+        .tambahDropdownPembukuan(ADMIN_ID, ADMIN_PW, jenis, nilai);
+    }
+
+    function hapusDropdownPembukuanUI(jenis, nilai) {
+      Swal.fire({
+        title: 'Hapus Data?',
+        text: `Hapus "${nilai}" dari daftar?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#DC2626'
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+        showLoading("Menghapus data...");
+        google.script.run
+          .withSuccessHandler(function (res) {
+            hideLoading();
+            if (res && res.success) {
+              muatDropdownPembukuan();
+            } else {
+              Swal.fire('Gagal', res ? res.message : 'Terjadi kesalahan.', 'error');
+            }
+          })
+          .withFailureHandler(function (err) {
+            hideLoading();
+            Swal.fire('Gagal', err.toString(), 'error');
+          })
+          .hapusDropdownPembukuan(ADMIN_ID, ADMIN_PW, jenis, nilai);
+      });
+    }
+
+    // ==================== 3. KELOLA KARYAWAN ====================
+
+    function muatDaftarKaryawan() {
+      const container = document.getElementById('listKaryawanSetup');
+      container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-spinner fa-spin fa-lg mb-2 d-block"></i>Memuat...</div>`;
+      google.script.run
+        .withSuccessHandler(function (res) {
+          if (res && res.success) {
+            renderDaftarKaryawan(res.daftar || []);
+          } else {
+            container.innerHTML = `<div class="empty-state text-danger">${res ? res.message : 'Gagal memuat data.'}</div>`;
+          }
+        })
+        .withFailureHandler(function (err) {
+          container.innerHTML = `<div class="empty-state text-danger">${err.toString()}</div>`;
+        })
+        .getDaftarKaryawanSetup(ADMIN_ID, ADMIN_PW);
+    }
+
+    function renderDaftarKaryawan(daftar) {
+      const container = document.getElementById('listKaryawanSetup');
+      container.innerHTML = "";
+      if (!daftar || daftar.length === 0) {
+        container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-user-slash fa-lg mb-2 d-block"></i>Belum ada karyawan terdaftar.</div>`;
+        return;
+      }
+      daftar.forEach(nama => {
+        const row = document.createElement('div');
+        row.className = "list-item-setup";
+        row.innerHTML = `
+          <span class="fw-bold text-dark"><i class="fa-solid fa-user me-2 text-primary"></i>${nama}</span>
+          <button class="btn btn-sm btn-outline-danger" onclick="hapusKaryawanUI('${nama.replace(/'/g, "\\'")}')">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function tambahKaryawanUI() {
+      const input = document.getElementById('inputKaryawanBaru');
+      const nama = input.value.trim();
+      if (!nama) {
+        Swal.fire('Perhatian', 'Nama tidak boleh kosong.', 'warning');
+        return;
+      }
+      showLoading("Menambahkan karyawan...");
+      google.script.run
+        .withSuccessHandler(function (res) {
+          hideLoading();
+          if (res && res.success) {
+            input.value = "";
+            Swal.fire('Berhasil', res.message, 'success');
+            muatDaftarKaryawan();
+          } else {
+            Swal.fire('Gagal', res ? res.message : 'Terjadi kesalahan.', 'error');
+          }
+        })
+        .withFailureHandler(function (err) {
+          hideLoading();
+          Swal.fire('Gagal', err.toString(), 'error');
+        })
+        .tambahKaryawan(ADMIN_ID, ADMIN_PW, nama);
+    }
+
+    function hapusKaryawanUI(nama) {
+      Swal.fire({
+        title: 'Hapus Karyawan?',
+        text: `Karyawan "${nama}" tidak akan bisa login ke sistem lagi setelah dihapus. Lanjutkan?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Hapus',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#DC2626'
+      }).then((result) => {
+        if (!result.isConfirmed) return;
+        showLoading("Menghapus karyawan...");
+        google.script.run
+          .withSuccessHandler(function (res) {
+            hideLoading();
+            if (res && res.success) {
+              Swal.fire('Berhasil', res.message, 'success');
+              muatDaftarKaryawan();
+            } else {
+              Swal.fire('Gagal', res ? res.message : 'Terjadi kesalahan.', 'error');
+            }
+          })
+          .withFailureHandler(function (err) {
+            hideLoading();
+            Swal.fire('Gagal', err.toString(), 'error');
+          })
+          .hapusKaryawan(ADMIN_ID, ADMIN_PW, nama);
+      });
+    }
+  </script>
+</body>
+</html>
